@@ -8,10 +8,6 @@ import sys
 import mediapipe as mp
 import numpy as np
 import cv2
-from pathlib import Path
-
-
-prj_dir = Path(__file__).resolve().parent.parent # prj root dir
 
 
 landmarks_num = mp.solutions.hands.HandLandmark # Landmark index
@@ -256,14 +252,3 @@ def thanos_finger_snap():
     hand_landmarker.close()
     cam.release()
     cv2.destroyAllWindows()
-
-
-# Entry point
-def main():
-    '''
-    Entry point
-    '''
-    thanos_finger_snap()
-
-if __name__ == '__main__':
-    main()
