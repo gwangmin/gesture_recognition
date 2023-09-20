@@ -17,7 +17,7 @@ def main():
     '''
     Entry point
     '''
-    hand_landmarks.thanos_finger_snap()
+    hand_landmarks.playground()
 
 if __name__ == '__main__':
     main()

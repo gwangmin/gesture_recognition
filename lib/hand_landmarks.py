@@ -170,6 +170,37 @@ class FingerSnap:
         sys.exit(0)
 
 
+def playground():
+    '''
+    Hand landmark detection test from webcam
+    '''
+    hand_landmarker = HandLandmarker(max_num_hands=2,
+                                      min_detection_confidence=0.5,
+                                      min_tracking_confidence=0.5)
+    cam = cv2.VideoCapture(0)
+    cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
+    while cam.isOpened():
+        success, frame = cam.read() # get frame from cam
+        if success:
+            # preprocessing
+            frame = cv2.flip(frame, 1) # y-axis flip
+            # get hand landmarks
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = hand_landmarker.get_result(img)
+            # extract info
+            if result.multi_hand_landmarks:
+                for hand_landmarks in result.multi_hand_landmarks:
+                    draw_landmarks(frame, hand_landmarks)
+            # show frame
+            cv2.imshow('webcam', frame)
+            if cv2.waitKey(delay=1) == ord('q'):
+                break
+    # exit
+    hand_landmarker.close()
+    cam.release()
+    cv2.destroyAllWindows()
+
+
 # Examples
 def example1():
     '''
