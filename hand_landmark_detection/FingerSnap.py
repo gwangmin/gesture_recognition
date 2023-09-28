@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 
 from lib import OneHandGestureBase
+from lib import OneHandGestureManager
 from lib import HandLandmarker
 from lib import landmarks_num
 from lib import draw_landmarks
@@ -115,7 +116,7 @@ def finger_snap():
                                      min_tracking_confidence=min_tracking_confidence)
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
-    finger_snap_list = [FingerSnap(DISTANCE_THRESHOLD, KEEP_DURATION)] * max_num_hands
+    fingersnap_mgr = OneHandGestureManager([FingerSnap(DISTANCE_THRESHOLD, KEEP_DURATION)] * max_num_hands)
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
@@ -128,16 +129,12 @@ def finger_snap():
             if result.multi_handedness:
                 for i in range(len(result.multi_hand_landmarks)):
                     # gesture
-                    finger_snap = finger_snap_list[i]
-                    handedness = result.multi_handedness[i]
-                    hand_landmarks = result.multi_hand_landmarks[i]
-                    if finger_snap.check(handedness, hand_landmarks):
-                        finger_snap.handler()
+                    if fingersnap_mgr.check(i, result):
+                        fingersnap_mgr.handler(i)
                     # draw landmarks
-                    draw_landmarks(frame, hand_landmarks)
+                    draw_landmarks(frame, result.multi_hand_landmarks[i])
             else:
-                for finger_snap in finger_snap_list:
-                    finger_snap.init()
+                fingersnap_mgr.init('all')
             # show frame
             cv2.imshow('webcam', frame)
             if cv2.waitKey(1) == ord('q'):

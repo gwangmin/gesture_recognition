@@ -120,7 +120,7 @@ class OneHandGestureBase:
     
     def check(self, handedness, hand_landmarks):
         '''
-        Check hand landmark detection result. return True, if gesture detected.
+        Check hand landmark detection result. return True, if gesture recognized.
 
         handedness: one handedness
         hand_landmarks: one hand landmarks
@@ -131,9 +131,52 @@ class OneHandGestureBase:
         '''
         Default gesture handler
 
-        When gesture detected, execute this method.
+        When gesture recognized, execute this method.
         '''
         raise NotImplementedError()
+
+class OneHandGestureManager:
+    '''
+    Manager for Multi-Hand gesture recognition using One-Hand gesture class
+    '''
+    def __init__(self, one_hand_gesture_list) -> None:
+        '''
+        Initializer
+
+        one_hand_gesture_list: [OneHandGestureBase's child instance] * max_num_hands
+        '''
+        self.instance_list = one_hand_gesture_list
+    
+    def init(self, idx):
+        '''
+        Call 'init' on specified instance
+
+        idx: index or 'all'
+        '''
+        if idx == 'all':
+            for instance in self.instance_list:
+                instance.init()
+        else:
+            self.instance_list[idx].init()
+    
+    def check(self, idx, result):
+        '''
+        Call 'check' on specified instance
+
+        idx: index
+        '''
+        handedness = result.multi_handedness[idx]
+        hand_landmarks = result.multi_hand_landmarks[idx]
+        ret = self.instance_list[idx].check(handedness, hand_landmarks)
+        return ret
+
+    def handler(self, idx):
+        '''
+        Call 'handler' on specified instance
+        
+        idx: index
+        '''
+        self.instance_list[idx].handler()
 
 
 ### examples
