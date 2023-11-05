@@ -216,6 +216,11 @@ def playground():
                     cv2.putText(frame, text, (10,90), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (255,0,0), thickness=3, lineType=cv2.LINE_AA)
                     
+                    d = np.linalg.norm(np.array([thumb_tip.x,thumb_tip.y,thumb_tip.z]) - np.array([middle_tip.x,middle_tip.y,middle_tip.z])) * 100
+                    text = f'dist: {d}'
+                    cv2.putText(frame, text, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (255,0,0), thickness=3, lineType=cv2.LINE_AA)
+                    
                     draw_landmarks(frame, hand_landmarks)
             # show frame
             cv2.imshow('webcam', frame)
