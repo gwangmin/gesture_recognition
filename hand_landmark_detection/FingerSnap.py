@@ -36,6 +36,7 @@ class FingerSnap(OneHandGestureBase):
         self.state = FingerSnap.AVAILABLE_STATES[0]
         self.finger_dist = None
         self.wrist_middle_dist = None
+        self.wrist_thumb_dist = None
 
     def check(self, handedness, hand_landmarks):
         thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
@@ -59,16 +60,19 @@ class FingerSnap(OneHandGestureBase):
             wrist = hand_landmarks.landmark[landmarks_num.WRIST]
             wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
             wrist_middle_dist = np.linalg.norm(wrist_arr - middle_tip_arr) * 100 #
+            wrist_thumb_dist = np.linalg.norm(wrist_arr - thumb_tip_arr) * 100 #
 
             # if thumb and middle finger moves away from each other
             # and middle finger and wrist are close together
+            # and thumb and wrist are moves away from each other
             # for KEEP_DURATION secs
             if (self.DISTANCE_THRESHOLD < finger_dist): # moves away
                 if (self.finger_dist is None) and (self.wrist_middle_dist is None): # save additional progress info
                     self.finger_dist = finger_dist
                     self.wrist_middle_dist = wrist_middle_dist
+                    self.wrist_thumb_dist = wrist_thumb_dist
                 else:
-                    if (self.finger_dist <= finger_dist) and (wrist_middle_dist <= self.wrist_middle_dist):
+                    if (self.finger_dist <= finger_dist) and (wrist_middle_dist <= self.wrist_middle_dist) and (self.wrist_thumb_dist <= wrist_thumb_dist):
                         self.state = FingerSnap.AVAILABLE_STATES[2]
                     else:
                         ### DEBUG
@@ -82,6 +86,7 @@ class FingerSnap(OneHandGestureBase):
         elif self.state == FingerSnap.AVAILABLE_STATES[2]:
             self.init()
             return True
+        
         return False
     
     def handler(self):
