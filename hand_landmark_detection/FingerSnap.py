@@ -1,3 +1,7 @@
+'''
+finger snap gesture
+'''
+
 import sys
 import time
 import cv2
@@ -13,6 +17,7 @@ from lib import draw_landmarks
 class FingerSnap(OneHandGestureBase):
     '''
     This class represents Finger Snap Gesture
+    (tip: 손바닥이 카메라를 향하게 하고 스냅을 빠르게 하면 잘 인식됨)
 
     states:
         None - Nothing detected
@@ -20,7 +25,7 @@ class FingerSnap(OneHandGestureBase):
         after - after snap sounds
     '''
     AVAILABLE_STATES = [None, 'before', 'after']
-    def __init__(self, DISTANCE_THRESHOLD=4.0, KEEP_DURATION=0.05) -> None:
+    def __init__(self, DISTANCE_THRESHOLD=3.0, KEEP_DURATION=0.05) -> None:
         '''
         Default initializer
 
@@ -36,40 +41,44 @@ class FingerSnap(OneHandGestureBase):
         self.state = FingerSnap.AVAILABLE_STATES[0]
         self.finger_dist = None
         self.wrist_middle_dist = None
-        self.sound_start_time = None
+        self.wrist_thumb_dist = None
 
     def check(self, handedness, hand_landmarks):
         thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
+        index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
         middle_tip = hand_landmarks.landmark[landmarks_num.MIDDLE_FINGER_TIP]
-        wrist = hand_landmarks.landmark[landmarks_num.WRIST]
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
         finger_dist = np.linalg.norm(thumb_tip_arr - middle_tip_arr) * 100 #
+
         # if state 0
         if self.state == FingerSnap.AVAILABLE_STATES[0]:
             # if thumb and middle finger are close together
-            if (finger_dist < self.DISTANCE_THRESHOLD):
+            # and index finger is up
+            if (finger_dist < self.DISTANCE_THRESHOLD) and (index_tip.y < thumb_tip.y) and (index_tip.y < middle_tip.y):
                 self.state = FingerSnap.AVAILABLE_STATES[1]
+
         # if state 1
         elif self.state == FingerSnap.AVAILABLE_STATES[1]:
             # calc wrist dist
+            wrist = hand_landmarks.landmark[landmarks_num.WRIST]
             wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
             wrist_middle_dist = np.linalg.norm(wrist_arr - middle_tip_arr) * 100 #
-            # if thumb and middle finger moves away from each other 
+            wrist_thumb_dist = np.linalg.norm(wrist_arr - thumb_tip_arr) * 100 #
+
+            # if thumb and middle finger moves away from each other
             # and middle finger and wrist are close together
+            # and thumb and wrist are moves away from each other
             # for KEEP_DURATION secs
-            if (self.DISTANCE_THRESHOLD < finger_dist):
-                if (self.finger_dist is None) and (self.wrist_middle_dist is None):
+            if (self.DISTANCE_THRESHOLD < finger_dist): # moves away
+                if (self.finger_dist is None) and (self.wrist_middle_dist is None): # save additional progress info
                     self.finger_dist = finger_dist
                     self.wrist_middle_dist = wrist_middle_dist
-                    self.sound_start_time = time.time()
+                    self.wrist_thumb_dist = wrist_thumb_dist
                 else:
-                    if (self.finger_dist <= finger_dist) and (wrist_middle_dist <= self.wrist_middle_dist):
-                        self.finger_dist = finger_dist
-                        self.wrist_middle_dist = wrist_middle_dist
-                        if (time.time() - self.sound_start_time) >= self.KEEP_DURATION:
-                            self.state = FingerSnap.AVAILABLE_STATES[2]
+                    if (self.finger_dist <= finger_dist) and (wrist_middle_dist <= self.wrist_middle_dist) and (self.wrist_thumb_dist <= wrist_thumb_dist):
+                        self.state = FingerSnap.AVAILABLE_STATES[2]
                     else:
                         ### DEBUG
                         print(f'# init reason')
@@ -77,10 +86,12 @@ class FingerSnap(OneHandGestureBase):
                         print(f'finger_dist, wrist_middle_dist: {finger_dist}, {wrist_middle_dist}')#
                         ###
                         self.init()
+
         # if last state
         elif self.state == FingerSnap.AVAILABLE_STATES[2]:
             self.init()
             return True
+        
         return False
     
     def handler(self):
@@ -93,9 +104,60 @@ class FingerSnap(OneHandGestureBase):
             'sleep': 'sleep 1',
             'hw_sleep': 'sudo shutdown -s now',
         }
-        os.system(cmd['sleep'])
         # os.system(cmd['hw_sleep'])
         sys.exit(0)
+
+
+def playground():
+    '''
+    Hand landmark detection test from webcam
+    '''
+    hand_landmarker = HandLandmarker(max_num_hands=1,
+                                      min_detection_confidence=0.5,
+                                      min_tracking_confidence=0.5)
+    cam = cv2.VideoCapture(0)
+    cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
+    while cam.isOpened():
+        success, frame = cam.read() # get frame from cam
+        if success:
+            # preprocessing
+            frame = cv2.flip(frame, 1) # y-axis flip
+            # get hand landmarks
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = hand_landmarker.get_result(img)
+            # extract info
+            if result.multi_hand_landmarks:
+                for hand_landmarks in result.multi_hand_landmarks:
+                    thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
+                    index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
+                    middle_tip = hand_landmarks.landmark[landmarks_num.MIDDLE_FINGER_TIP]
+
+                    text = f'THUMB_TIP: {int(thumb_tip.x*100)}, {int(thumb_tip.y*100)}, {int(thumb_tip.z*100)}'
+                    cv2.putText(frame, text, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (0,0,255), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    text = f'INDEX_FINGER_TIP: {int(index_tip.x*100)}, {int(index_tip.y*100)}, {int(index_tip.z*100)}'
+                    cv2.putText(frame, text, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (0,255,0), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    text = f'MIDDLE_FINGER_TIP: {int(middle_tip.x*100)}, {int(middle_tip.y*100)}, {int(middle_tip.z*100)}'
+                    cv2.putText(frame, text, (10,90), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (255,0,0), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    d = np.linalg.norm(np.array([thumb_tip.x,thumb_tip.y,thumb_tip.z]) - np.array([middle_tip.x,middle_tip.y,middle_tip.z])) * 100
+                    text = f'dist: {d}'
+                    cv2.putText(frame, text, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (255,0,0), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    draw_landmarks(frame, hand_landmarks)
+            # show frame
+            cv2.imshow('webcam', frame)
+            if cv2.waitKey(delay=1) == ord('q'):
+                break
+    # exit
+    hand_landmarker.close()
+    cam.release()
+    cv2.destroyAllWindows()
 
 
 def finger_snap():
@@ -108,7 +170,7 @@ def finger_snap():
     min_detection_confidence = 0.5
     min_tracking_confidence = 0.5
     ## gesture settings
-    DISTANCE_THRESHOLD = 4
+    DISTANCE_THRESHOLD = 3
     KEEP_DURATION = 0.05
 
     hand_landmarker = HandLandmarker(max_num_hands=max_num_hands,
