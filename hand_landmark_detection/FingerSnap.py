@@ -1,3 +1,7 @@
+'''
+finger snap gesture
+'''
+
 import sys
 import time
 import cv2
@@ -13,6 +17,7 @@ from lib import draw_landmarks
 class FingerSnap(OneHandGestureBase):
     '''
     This class represents Finger Snap Gesture
+    (tip: 손바닥이 카메라를 향하게 하고 스냅을 빠르게 하면 잘 인식됨)
 
     states:
         None - Nothing detected
