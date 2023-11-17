@@ -23,7 +23,7 @@ class Click(OneHandGestureBase):
         release - release
     '''
     AVAILABLE_STATES = [None, 'pinch', 'release']
-    def __init__(self, DISTANCE_THRESHOLD=3.0) -> None:
+    def __init__(self, DISTANCE_THRESHOLD=2.0) -> None:
         '''
         Default initializer
 
@@ -35,38 +35,34 @@ class Click(OneHandGestureBase):
     
     def init(self):
         self.state = Click.AVAILABLE_STATES[0]
+        self.wrist_index_dist = None
 
     def check(self, handedness, hand_landmarks):
-        # get thumb
         thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
-        thumb2 = hand_landmarks.landmark[landmarks_num.THUMB_IP]
-        thumb3 = hand_landmarks.landmark[landmarks_num.THUMB_MCP]
-        # get index finger
         index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
-        index2 = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_DIP]
-        index3 = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_PIP]
+        wrist = hand_landmarks.landmark[landmarks_num.WRIST]
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
-        dist_tip = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
-        thumb2_arr = np.array([thumb2.x, thumb2.y, thumb2.z])
-        index2_arr = np.array([index2.x, index2.y, index2.z])
-        dist2 = np.linalg.norm(thumb2_arr - index2_arr) * 100
-        thumb3_arr = np.array([thumb3.x, thumb3.y, thumb3.z])
-        index3_arr = np.array([index3.x, index3.y, index3.z])
-        dist3 = np.linalg.norm(thumb3_arr - index3_arr) * 100
+        tip_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
+        wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
+        wrist_index_dist = np.linalg.norm(index_tip_arr - wrist_arr) * 100
 
         # if state 0
         if self.state == Click.AVAILABLE_STATES[0]:
             # if thumb and index finger are close together
-            if (dist_tip < self.DISTANCE_THRESHOLD) and (dist_tip < dist2) and (dist2 < dist3):
+            if (tip_dist < self.DISTANCE_THRESHOLD):
                 self.state = Click.AVAILABLE_STATES[1]
+                self.wrist_index_dist = wrist_index_dist
 
         # if state 1
         elif self.state == Click.AVAILABLE_STATES[1]:
             # if thumb and index finger moves away from each other
-            if (self.DISTANCE_THRESHOLD < dist_tip):
-                self.state = Click.AVAILABLE_STATES[2]
+            if self.DISTANCE_THRESHOLD < tip_dist:
+                if self.wrist_index_dist < wrist_index_dist:
+                    self.state = Click.AVAILABLE_STATES[2]
+                else:
+                    self.init()
 
         # if last state
         elif self.state == Click.AVAILABLE_STATES[2]:
