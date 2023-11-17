@@ -27,7 +27,7 @@ class Click(OneHandGestureBase):
         '''
         Default initializer
 
-        DISTANCE_THRESHOLD: middle finger tip and index finger tip distance
+        DISTANCE_THRESHOLD: thumb tip and index finger tip distance threshold.
             when pinch. unit: %
         '''
         self.DISTANCE_THRESHOLD = DISTANCE_THRESHOLD
@@ -37,23 +37,35 @@ class Click(OneHandGestureBase):
         self.state = Click.AVAILABLE_STATES[0]
 
     def check(self, handedness, hand_landmarks):
+        # get thumb
         thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
+        thumb2 = hand_landmarks.landmark[landmarks_num.THUMB_IP]
+        thumb3 = hand_landmarks.landmark[landmarks_num.THUMB_MCP]
+        # get index finger
         index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
+        index2 = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_DIP]
+        index3 = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_PIP]
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
-        finger_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
+        dist_tip = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
+        thumb2_arr = np.array([thumb2.x, thumb2.y, thumb2.z])
+        index2_arr = np.array([index2.x, index2.y, index2.z])
+        dist2 = np.linalg.norm(thumb2_arr - index2_arr) * 100
+        thumb3_arr = np.array([thumb3.x, thumb3.y, thumb3.z])
+        index3_arr = np.array([index3.x, index3.y, index3.z])
+        dist3 = np.linalg.norm(thumb3_arr - index3_arr) * 100
 
         # if state 0
         if self.state == Click.AVAILABLE_STATES[0]:
             # if thumb and index finger are close together
-            if (finger_dist < self.DISTANCE_THRESHOLD):
+            if (dist_tip < self.DISTANCE_THRESHOLD) and (dist_tip < dist2) and (dist2 < dist3):
                 self.state = Click.AVAILABLE_STATES[1]
 
         # if state 1
         elif self.state == Click.AVAILABLE_STATES[1]:
             # if thumb and index finger moves away from each other
-            if (self.DISTANCE_THRESHOLD < finger_dist):
+            if (self.DISTANCE_THRESHOLD < dist_tip):
                 self.state = Click.AVAILABLE_STATES[2]
 
         # if last state
@@ -141,7 +153,7 @@ def click():
     min_detection_confidence = 0.5
     min_tracking_confidence = 0.5
     ## gesture settings
-    DISTANCE_THRESHOLD = 3
+    DISTANCE_THRESHOLD = 2
 
     hand_landmarker = HandLandmarker(max_num_hands=max_num_hands,
                                      min_detection_confidence=min_detection_confidence,
