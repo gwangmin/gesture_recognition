@@ -23,7 +23,7 @@ class Click(OneHandGestureBase):
         release - release
     '''
     AVAILABLE_STATES = [None, 'pinch', 'release']
-    def __init__(self, DISTANCE_THRESHOLD=2.0) -> None:
+    def __init__(self, DISTANCE_THRESHOLD=3.0) -> None:
         '''
         Default initializer
 
@@ -36,16 +36,18 @@ class Click(OneHandGestureBase):
     def init(self):
         self.state = Click.AVAILABLE_STATES[0]
         self.wrist_index_dist = None
+        self.middle_tip_arr = None
 
     def check(self, handedness, hand_landmarks):
         thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
         index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
+        middle_tip = hand_landmarks.landmark[landmarks_num.MIDDLE_FINGER_TIP]
         wrist = hand_landmarks.landmark[landmarks_num.WRIST]
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
-        tip_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
         wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
+        tip_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
         wrist_index_dist = np.linalg.norm(index_tip_arr - wrist_arr) * 100
 
         # if state 0
@@ -54,12 +56,19 @@ class Click(OneHandGestureBase):
             if (tip_dist < self.DISTANCE_THRESHOLD):
                 self.state = Click.AVAILABLE_STATES[1]
                 self.wrist_index_dist = wrist_index_dist
+                self.middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
 
         # if state 1
         elif self.state == Click.AVAILABLE_STATES[1]:
+            # calc middle tip dist
+            cur_middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
+            middle_tip_dist = np.linalg.norm(self.middle_tip_arr - cur_middle_tip_arr) * 100
+
             # if thumb and index finger moves away from each other
-            if self.DISTANCE_THRESHOLD < tip_dist:
-                if self.wrist_index_dist < wrist_index_dist:
+            if (self.DISTANCE_THRESHOLD < tip_dist):
+                # while middle finger is stopped
+                # and index finger moves up
+                if (middle_tip_dist < self.DISTANCE_THRESHOLD) and (self.wrist_index_dist < wrist_index_dist):
                     self.state = Click.AVAILABLE_STATES[2]
                 else:
                     self.init()
@@ -149,7 +158,7 @@ def click():
     min_detection_confidence = 0.5
     min_tracking_confidence = 0.5
     ## gesture settings
-    DISTANCE_THRESHOLD = 2
+    DISTANCE_THRESHOLD = 3
 
     hand_landmarker = HandLandmarker(max_num_hands=max_num_hands,
                                      min_detection_confidence=min_detection_confidence,
