@@ -177,7 +177,7 @@ def click():
             if result.gestures:
                 for i in range(len(result.hand_landmarks)):
                     # gesture
-                    handedness = result.handedness[i]
+                    handedness = result.handedness[i][0].display_name
                     hand_landmarks = result.hand_landmarks[i]
                     info = {'gesture_name': result.gestures[i][0].category_name}
                     if click_mgr.check(i, handedness, hand_landmarks, info):

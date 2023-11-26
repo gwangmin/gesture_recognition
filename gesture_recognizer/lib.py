@@ -232,7 +232,7 @@ class OneHandGestureBase:
         '''
         Check hand landmark detection result. return True, if gesture recognized.
 
-        handedness: one handedness.
+        handedness: one handedness display_name. 'Right' or 'Left'
         hand_landmarks: one hand landmarks.
         info: dict. other info.
         '''
@@ -362,7 +362,7 @@ def gesture_recognizer_test():
                     cv2.putText(frame, handedness_str, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,0,255), thickness=3, lineType=cv2.LINE_AA)
                     
-                    gesture_category = f'Gesture: {result.gestures[i][0]}'
+                    gesture_category = f'Gesture: {result.gestures[i][0].category_name}'
                     cv2.putText(frame, gesture_category, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,255,0), thickness=3, lineType=cv2.LINE_AA)
                     
