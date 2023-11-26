@@ -8,9 +8,8 @@ import numpy as np
 
 from lib import OneHandGestureBase
 from lib import OneHandGestureManager
-from lib import HandLandmarker
+from lib import GestureRecognizer
 from lib import landmarks_num
-from lib import draw_landmarks
 
 
 class Click(OneHandGestureBase):
@@ -38,11 +37,11 @@ class Click(OneHandGestureBase):
         self.wrist_index_dist = None
         self.middle_tip_arr = None
 
-    def check(self, handedness, hand_landmarks):
-        thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
-        index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
-        middle_tip = hand_landmarks.landmark[landmarks_num.MIDDLE_FINGER_TIP]
-        wrist = hand_landmarks.landmark[landmarks_num.WRIST]
+    def check(self, handedness, hand_landmarks, info):
+        thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
+        index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
+        middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
+        wrist = hand_landmarks[landmarks_num.WRIST]
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
@@ -96,11 +95,12 @@ class Click(OneHandGestureBase):
 
 def playground():
     '''
-    Hand landmark detection test from webcam
+    Hand landmarks test from webcam
     '''
-    hand_landmarker = HandLandmarker(max_num_hands=1,
-                                      min_detection_confidence=0.5,
-                                      min_tracking_confidence=0.5)
+    recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
+                                   max_num_hands=2, download_model=False)
+    timestamp_ms = 0
+    
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
     while cam.isOpened():
@@ -109,14 +109,14 @@ def playground():
             # preprocessing
             frame = cv2.flip(frame, 1) # y-axis flip
             # get hand landmarks
-            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            result = hand_landmarker.get_result(img)
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = recognizer.get_result(rgb, timestamp_ms)
             # extract info
-            if result.multi_hand_landmarks:
-                for hand_landmarks in result.multi_hand_landmarks:
-                    thumb_tip = hand_landmarks.landmark[landmarks_num.THUMB_TIP]
-                    index_tip = hand_landmarks.landmark[landmarks_num.INDEX_FINGER_TIP]
-                    middle_tip = hand_landmarks.landmark[landmarks_num.MIDDLE_FINGER_TIP]
+            if result.gestures:
+                for hand_landmarks in result.hand_landmarks:
+                    thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
+                    index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
+                    middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
 
                     text = f'THUMB_TIP: {int(thumb_tip.x*100)}, {int(thumb_tip.y*100)}, {int(thumb_tip.z*100)}'
                     cv2.putText(frame, text, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
@@ -137,13 +137,14 @@ def playground():
                     cv2.putText(frame, text, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (255,0,0), thickness=3, lineType=cv2.LINE_AA)
                     
-                    draw_landmarks(frame, hand_landmarks)
+                    GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             # show frame
             cv2.imshow('webcam', frame)
             if cv2.waitKey(delay=1) == ord('q'):
                 break
+            timestamp_ms += 1
     # exit
-    hand_landmarker.close()
+    recognizer.close()
     cam.release()
     cv2.destroyAllWindows()
 
@@ -153,19 +154,17 @@ def click():
     Click gesture recognition with webcam
     '''
     # Settings
-    ## landmarker settings
-    max_num_hands = 1
-    min_detection_confidence = 0.5
-    min_tracking_confidence = 0.5
-    ## gesture settings
-    DISTANCE_THRESHOLD = 3
+    max_num_hands = 2
+    DISTANCE_THRESHOLD = 2.5
 
-    hand_landmarker = HandLandmarker(max_num_hands=max_num_hands,
-                                     min_detection_confidence=min_detection_confidence,
-                                     min_tracking_confidence=min_tracking_confidence)
+    recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
+                                   max_num_hands=max_num_hands, download_model=False)
+    timestamp_ms = 0
+
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
-    fingersnap_mgr = OneHandGestureManager([Click(DISTANCE_THRESHOLD)] * max_num_hands)
+
+    click_mgr = OneHandGestureManager([Click(DISTANCE_THRESHOLD)] * max_num_hands)
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
@@ -173,23 +172,27 @@ def click():
             # preprocessing
             frame = cv2.flip(frame, 1) # y-axis flip
             # get hand landmarks
-            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            result = hand_landmarker.get_result(img)
-            if result.multi_handedness:
-                for i in range(len(result.multi_hand_landmarks)):
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = recognizer.get_result(rgb, timestamp_ms)
+            if result.gestures:
+                for i in range(len(result.hand_landmarks)):
                     # gesture
-                    if fingersnap_mgr.check(i, result):
-                        fingersnap_mgr.handler(i)
+                    handedness = result.handedness[i]
+                    hand_landmarks = result.hand_landmarks[i]
+                    info = {'gesture_name': result.gestures[i][0].category_name}
+                    if click_mgr.check(i, handedness, hand_landmarks, info):
+                        click_mgr.handler(i)
                     # draw landmarks
-                    draw_landmarks(frame, result.multi_hand_landmarks[i])
+                    GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             else:
-                fingersnap_mgr.init('all')
+                click_mgr.init('all')
             # show frame
             cv2.imshow('webcam', frame)
             if cv2.waitKey(1) == ord('q'):
                 break
+            timestamp_ms += 1
     # exit
-    hand_landmarker.close()
+    recognizer.close()
     cam.release()
     cv2.destroyAllWindows()
 

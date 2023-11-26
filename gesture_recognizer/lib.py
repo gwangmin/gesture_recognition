@@ -15,6 +15,8 @@ landmarks_num = mp.solutions.hands.HandLandmark # landmark index
 
 class HandLandmarker:
     '''
+    [Deprecated]
+
     Hand landmarker using mp.solutions
 
     mp.solutions.hands: https://github.com/google/mediapipe/blob/master/docs/solutions/hands.md
@@ -107,6 +109,15 @@ class GestureRecognizer:
     IMAGE = vision.RunningMode.IMAGE
     VIDEO = vision.RunningMode.VIDEO
     LIVE_STREAM = vision.RunningMode.LIVE_STREAM
+    # Basic gesture category_name
+    NONE = 'None'
+    CLOSED_FIST = 'Closed_Fist'
+    OPEN_PALM = 'Open_Palm'
+    POINTING_UP = 'Pointing_Up'
+    THUMB_UP = 'Thumb_Up'
+    THUMB_DOWN = 'Thumb_Down'
+    VICTORY = 'Victory'
+    ILOVEYOU = 'ILoveYou'
 
     def __init__(self, mode=IMAGE, max_num_hands=1, result_callback=None, download_model=True) -> None:
         '''
@@ -156,6 +167,9 @@ class GestureRecognizer:
 
         rgb_img: input rgb image
         elapsed_timestamp_ms: elapsed time after start. in ms.
+
+        return: GestureRecognizerResult
+                (https://developers.google.com/mediapipe/api/solutions/python/mp/tasks/vision/GestureRecognizerResult)
         '''
         img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_img)
         if self.mode == self.IMAGE:
@@ -169,16 +183,16 @@ class GestureRecognizer:
         return self.__parse_result(result)
 
     @classmethod
-    def draw_landmarks(cls, rgb_img, one_hand_landmark_obj):
+    def draw_landmarks(cls, rgb_img, one_hand_landmarks):
         '''
         Draw one hand landmarks.
 
         rgb_img: image
-        one_hand_landmark_obj: one hand landmark obj.
+        one_hand_landmarks: one hand landmarks.
         '''
         hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         hand_landmarks_proto.landmark.extend([
-            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in one_hand_landmark_obj
+            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in one_hand_landmarks
         ])
         HandLandmarker.draw_landmarks(rgb_img, hand_landmarks_proto)
 
@@ -192,7 +206,7 @@ class GestureRecognizer:
 ### gestures
 class OneHandGestureBase:
     '''
-    Base class for one hand gesture recognition
+    Base class for One-Hand gesture recognition
     '''
     AVAILABLE_STATES = [None, 'others']
     def __init__(self) -> None:
@@ -209,15 +223,18 @@ class OneHandGestureBase:
     def init(self):
         '''
         Self initializing
+
+        initialize internal state
         '''
         raise NotImplementedError()
     
-    def check(self, handedness, hand_landmarks):
+    def check(self, handedness, hand_landmarks, info):
         '''
         Check hand landmark detection result. return True, if gesture recognized.
 
-        handedness: one handedness
-        hand_landmarks: one hand landmarks
+        handedness: one handedness.
+        hand_landmarks: one hand landmarks.
+        info: dict. other info.
         '''
         raise NotImplementedError()
     
@@ -253,15 +270,14 @@ class OneHandGestureManager:
         else:
             self.instance_list[idx].init()
     
-    def check(self, idx, result):
+    def check(self, idx, handedness, hand_landmarks, info):
         '''
         Call 'check' on specified instance
 
         idx: index
+        other params: OneHandGestureBase.check
         '''
-        handedness = result.multi_handedness[idx]
-        hand_landmarks = result.multi_hand_landmarks[idx]
-        ret = self.instance_list[idx].check(handedness, hand_landmarks)
+        ret = self.instance_list[idx].check(handedness, hand_landmarks, info)
         return ret
 
     def handler(self, idx):
@@ -349,6 +365,11 @@ def gesture_recognizer_test():
                     gesture_category = f'Gesture: {result.gestures[i][0]}'
                     cv2.putText(frame, gesture_category, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,255,0), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    index_tip = one_hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
+                    text = f'INDEX_FINGER_TIP: {int(index_tip.x*100)}, {int(index_tip.y*100)}, {int(index_tip.z*100)}'
+                    cv2.putText(frame, text, (10,90), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (255,0,0), thickness=3, lineType=cv2.LINE_AA)
                     
                     GestureRecognizer.draw_landmarks(frame, one_hand_landmarks)
             # show frame
