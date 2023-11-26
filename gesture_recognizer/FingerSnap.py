@@ -13,10 +13,13 @@ from lib import GestureRecognizer
 from lib import landmarks_num
 
 
+DEBUG = False
+
+
 class FingerSnap(OneHandGestureBase):
     '''
     This class represents Finger Snap Gesture
-    (tip: 손바닥이 카메라를 향하게 하고 스냅을 빠르게 하면 잘 인식됨)
+    (Your palm must be facing the camera for proper recognition)
 
     states:
         None - Nothing detected
@@ -24,23 +27,20 @@ class FingerSnap(OneHandGestureBase):
         after - after snap sounds
     '''
     AVAILABLE_STATES = [None, 'before', 'after']
-    def __init__(self, DISTANCE_THRESHOLD=3.0, KEEP_DURATION=0.05) -> None:
+    def __init__(self, DISTANCE_THRESHOLD=3.0) -> None:
         '''
         Default initializer
 
         DISTANCE_THRESHOLD: when Finger Snap prepare motion, thumb and middle finger
             are close together within this distance. unit: %
-        KEEP_DURATION: gesture keep time. unit: second(s)
         '''
         self.DISTANCE_THRESHOLD = DISTANCE_THRESHOLD
-        self.KEEP_DURATION = KEEP_DURATION
         self.init()
     
     def init(self):
         self.state = FingerSnap.AVAILABLE_STATES[0]
-        self.finger_dist = None
+        self.thumb_middle_dist = None
         self.wrist_middle_dist = None
-        self.wrist_thumb_dist = None
 
     def check(self, handedness, hand_landmarks, info):
         thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
@@ -49,13 +49,13 @@ class FingerSnap(OneHandGestureBase):
         # calc dist
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
-        finger_dist = np.linalg.norm(thumb_tip_arr - middle_tip_arr) * 100 #
+        thumb_middle_dist = np.linalg.norm(thumb_tip_arr - middle_tip_arr) * 100
 
         # if state 0
         if self.state == FingerSnap.AVAILABLE_STATES[0]:
             # if thumb and middle finger are close together
             # and index finger is up
-            if (finger_dist < self.DISTANCE_THRESHOLD) and (index_tip.y < thumb_tip.y) and (index_tip.y < middle_tip.y):
+            if (thumb_middle_dist < self.DISTANCE_THRESHOLD) and (index_tip.y < thumb_tip.y) and (index_tip.y < middle_tip.y):
                 self.state = FingerSnap.AVAILABLE_STATES[1]
 
         # if state 1
@@ -63,33 +63,35 @@ class FingerSnap(OneHandGestureBase):
             # calc wrist dist
             wrist = hand_landmarks[landmarks_num.WRIST]
             wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
-            wrist_middle_dist = np.linalg.norm(wrist_arr - middle_tip_arr) * 100 #
-            wrist_thumb_dist = np.linalg.norm(wrist_arr - thumb_tip_arr) * 100 #
+            wrist_middle_dist = np.linalg.norm(wrist_arr - middle_tip_arr) * 100
+            index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
+            index_middle_dist = np.linalg.norm(index_tip_arr - middle_tip_arr) * 100
 
             # if thumb and middle finger moves away from each other
-            # and middle finger and wrist are close together
-            # and thumb and wrist are moves away from each other
-            # for KEEP_DURATION secs
-            if (self.DISTANCE_THRESHOLD < finger_dist): # moves away
-                if (self.finger_dist is None) and (self.wrist_middle_dist is None): # save additional progress info
-                    self.finger_dist = finger_dist
+            # and index finger is up
+            if (self.DISTANCE_THRESHOLD < thumb_middle_dist) and (index_tip.y < middle_tip.y):
+                if (self.thumb_middle_dist is None): # if first move, save additional progress info
+                    self.thumb_middle_dist = thumb_middle_dist
                     self.wrist_middle_dist = wrist_middle_dist
-                    self.wrist_thumb_dist = wrist_thumb_dist
                 else:
-                    if (self.finger_dist <= finger_dist) and (wrist_middle_dist <= self.wrist_middle_dist) and (self.wrist_thumb_dist <= wrist_thumb_dist):
+                    # if thumb and middle finger moves away from each other
+                    # and middle finger and wrist are close together
+                    if (self.thumb_middle_dist <= thumb_middle_dist) and (wrist_middle_dist <= self.wrist_middle_dist):
                         self.state = FingerSnap.AVAILABLE_STATES[2]
                     else:
                         ### DEBUG
-                        print(f'# init reason')
-                        print(f'self.finger_dist, self.wrist_middle_dist: {self.finger_dist}, {self.wrist_middle_dist}')#
-                        print(f'finger_dist, wrist_middle_dist: {finger_dist}, {wrist_middle_dist}')#
+                        if DEBUG == True:
+                            print(f'# init reason')
+                            print(f'self.thumb_middle_dist, self.wrist_middle_dist: {self.thumb_middle_dist}, {self.wrist_middle_dist}')
+                            print(f'thumb_middle_dist, wrist_middle_dist: {thumb_middle_dist}, {wrist_middle_dist}')
                         ###
                         self.init()
 
         # if last state
         elif self.state == FingerSnap.AVAILABLE_STATES[2]:
             self.init()
-            return True
+            if info['gesture_name'] != GestureRecognizer.CLOSED_FIST:
+                return True
         
         return False
     
@@ -168,7 +170,6 @@ def finger_snap():
     # Settings
     max_num_hands = 2
     DISTANCE_THRESHOLD = 3
-    KEEP_DURATION = 0.05
 
     recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
                                    max_num_hands=max_num_hands, download_model=False)
@@ -177,7 +178,7 @@ def finger_snap():
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
 
-    fingersnap_mgr = OneHandGestureManager([FingerSnap(DISTANCE_THRESHOLD, KEEP_DURATION)] * max_num_hands)
+    fingersnap_mgr = OneHandGestureManager([FingerSnap(DISTANCE_THRESHOLD)] * max_num_hands)
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
