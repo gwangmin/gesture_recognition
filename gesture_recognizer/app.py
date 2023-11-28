@@ -24,9 +24,9 @@ recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
                                max_num_hands=max_num_hands, download_model=True)
 timestamp_ms = 0
 # prepare
-fingersnap_mgr = OneHandGestureManager([FingerSnap(DISTANCE_THRESHOLD[FingerSnap])] * max_num_hands)
-click_mgr = OneHandGestureManager([Click(DISTANCE_THRESHOLD[Click])] * max_num_hands)
-fao_mgr = OneHandGestureManager([FistAndOpen()] * max_num_hands)
+fingersnap_mgr = OneHandGestureManager({'Left': FingerSnap(DISTANCE_THRESHOLD[FingerSnap]), 'Right': FingerSnap(DISTANCE_THRESHOLD[FingerSnap])})
+click_mgr = OneHandGestureManager({'Left': Click(DISTANCE_THRESHOLD[Click]), 'Right': Click(DISTANCE_THRESHOLD[Click])})
+fao_mgr = OneHandGestureManager({'Left': FistAndOpen(), 'Right': FistAndOpen()})
 
 
 # define gesture_id
@@ -63,7 +63,7 @@ def gesture_recognizer(webcam_bgr_img):
     if result.gestures:
         for i in range(len(result.hand_landmarks)):
             # extract handedness, hand_landmarks, gestures
-            handedness = result.handedness[i][0].display_name
+            handedness_name = result.handedness[i][0].display_name
             hand_landmarks = result.hand_landmarks[i]
             info = {'gesture_name': result.gestures[i][0].category_name}
             # fist_move
@@ -72,12 +72,12 @@ def gesture_recognizer(webcam_bgr_img):
                 x = round(index_tip.x, 2)
                 y = round(index_tip.y, 2)
                 z = round(index_tip.z, 2)
-                gesture_info = {'handedness': handedness, 'xyz': (x, y, z)}
+                gesture_info = {'handedness': handedness_name, 'xyz': (x, y, z)}
                 ret.append((FIST_MOVE, gesture_info))
             # other gestures
             for id, mgr in id2mgr.items():
-                if mgr.check(i, handedness, hand_landmarks, info):
-                    gesture_info = {'handedness': handedness}
+                if mgr.check(handedness_name, hand_landmarks, info):
+                    gesture_info = {'handedness': handedness_name}
                     ret.append((id, gesture_info))
             GestureRecognizer.draw_landmarks(rgb, hand_landmarks)
     else:
