@@ -37,7 +37,7 @@ class Click(OneHandGestureBase):
         self.wrist_index_dist = None
         self.middle_tip_arr = None
 
-    def check(self, handedness, hand_landmarks, info):
+    def check(self, handedness_name, hand_landmarks, info):
         thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
         index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
         middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
@@ -164,7 +164,7 @@ def click():
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
 
-    click_mgr = OneHandGestureManager([Click(DISTANCE_THRESHOLD)] * max_num_hands)
+    click_mgr = OneHandGestureManager({'Left': Click(DISTANCE_THRESHOLD), 'Right': Click(DISTANCE_THRESHOLD)})
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
@@ -177,11 +177,11 @@ def click():
             if result.gestures:
                 for i in range(len(result.hand_landmarks)):
                     # gesture
-                    handedness = result.handedness[i][0].display_name
+                    handedness_name = result.handedness[i][0].display_name
                     hand_landmarks = result.hand_landmarks[i]
                     info = {'gesture_name': result.gestures[i][0].category_name}
-                    if click_mgr.check(i, handedness, hand_landmarks, info):
-                        click_mgr.handler(i)
+                    if click_mgr.check(handedness_name, hand_landmarks, info):
+                        click_mgr.handler(handedness_name)
                     # draw landmarks
                     GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             else:

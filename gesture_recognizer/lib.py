@@ -228,13 +228,14 @@ class OneHandGestureBase:
         '''
         raise NotImplementedError()
     
-    def check(self, handedness, hand_landmarks, info):
+    def check(self, handedness_name, hand_landmarks, info):
         '''
         Check hand landmark detection result. return True, if gesture recognized.
 
-        handedness: one handedness display_name. 'Right' or 'Left'
+        handedness_name: handedness display_name. 'Left' or 'Right'.
         hand_landmarks: one hand landmarks.
         info: dict. other info.
+                e.g. {'gesture_name': result.gestures[i][0].category_name}
         '''
         raise NotImplementedError()
     
@@ -248,45 +249,45 @@ class OneHandGestureBase:
 
 class OneHandGestureManager:
     '''
-    Manager for Multi-Hand gesture recognition using One-Hand gesture class
+    Manager for 2-Hand gesture recognition by 2 One-Hand gesture instance
     '''
-    def __init__(self, one_hand_gesture_list) -> None:
+    def __init__(self, instances) -> None:
         '''
         Initializer
 
-        one_hand_gesture_list: [OneHandGestureBase's child instance] * max_num_hands
+        one_hand_gesture_list: {'Left': OneHandGestureBase's_child_instance, 'Right': OneHandGestureBase's_child_instance}
         '''
-        self.instance_list = one_hand_gesture_list
+        self.instances = instances
     
-    def init(self, idx):
+    def init(self, handedness_name):
         '''
         Call 'init' on specified instance
 
-        idx: index or 'all'
+        handedness_name: handedness display_name. 'Left' or 'Right'.
+                            or 'all'.
         '''
-        if idx == 'all':
-            for instance in self.instance_list:
+        if handedness_name == 'all':
+            for instance in self.instances.values():
                 instance.init()
         else:
-            self.instance_list[idx].init()
+            self.instances[handedness_name].init()
     
-    def check(self, idx, handedness, hand_landmarks, info):
+    def check(self, handedness_name, hand_landmarks, info):
         '''
         Call 'check' on specified instance
 
-        idx: index
-        other params: OneHandGestureBase.check
+        params: see OneHandGestureBase.check
         '''
-        ret = self.instance_list[idx].check(handedness, hand_landmarks, info)
+        ret = self.instances[handedness_name].check(handedness_name, hand_landmarks, info)
         return ret
 
-    def handler(self, idx):
+    def handler(self, handedness_name):
         '''
         Call 'handler' on specified instance
         
-        idx: index
+        handedness_name: handedness display_name. 'Left' or 'Right'.
         '''
-        self.instance_list[idx].handler()
+        self.instances[handedness_name].handler()
 
 
 ### examples
@@ -335,7 +336,6 @@ def hand_landmarker_test():
     hand_landmarker.close()
     cam.release()
     cv2.destroyAllWindows()
-
 
 def gesture_recognizer_test():
     '''

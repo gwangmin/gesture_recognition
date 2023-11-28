@@ -31,7 +31,7 @@ class FistAndOpen(OneHandGestureBase):
     def init(self):
         self.state = self.AVAILABLE_STATES[0]
 
-    def check(self, handedness, hand_landmarks, info):
+    def check(self, handedness_name, hand_landmarks, info):
         # if state 0
         if self.state == self.AVAILABLE_STATES[0]:
             # if closed_fist
@@ -131,7 +131,7 @@ def fistAndOpen():
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
 
-    fao_mgr = OneHandGestureManager([FistAndOpen()] * max_num_hands)
+    fao_mgr = OneHandGestureManager({'Left': FistAndOpen(), 'Right': FistAndOpen()})
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
@@ -144,11 +144,11 @@ def fistAndOpen():
             if result.gestures:
                 for i in range(len(result.hand_landmarks)):
                     # gesture
-                    handedness = result.handedness[i][0].display_name
+                    handedness_name = result.handedness[i][0].display_name
                     hand_landmarks = result.hand_landmarks[i]
                     info = {'gesture_name': result.gestures[i][0].category_name}
-                    if fao_mgr.check(i, handedness, hand_landmarks, info):
-                        fao_mgr.handler(i)
+                    if fao_mgr.check(handedness_name, hand_landmarks, info):
+                        fao_mgr.handler(handedness_name)
                     # draw landmarks
                     GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             else:
