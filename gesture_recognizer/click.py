@@ -96,7 +96,7 @@ class Click(OneHandGestureBase):
         sys.exit(0)
 
 
-def playground():
+def test():
     '''
     Hand landmarks test from webcam
     '''
@@ -105,6 +105,7 @@ def playground():
     timestamp_ms = 0
     
     cam = cv2.VideoCapture(0)
+    cam_w, cam_h = cam.get(cv2.CAP_PROP_FRAME_WIDTH), cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
@@ -120,25 +121,39 @@ def playground():
                     thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
                     index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
                     middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
+                    wrist = hand_landmarks[landmarks_num.WRIST]
+                    # calc dist
+                    thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
+                    index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
+                    middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
+                    wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
+                    thumb_index_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
+                    wrist_index_dist = np.linalg.norm(index_tip_arr - wrist_arr) * 100
 
-                    text = f'THUMB_TIP: {int(thumb_tip.x*100)}, {int(thumb_tip.y*100)}, {int(thumb_tip.z*100)}'
+
+                    middle_tip_arr = np.array([middle_tip.x, middle_tip.y])
+                    wrist_arr = np.array([wrist.x, wrist.y])
+                    wrist_middle_dist = np.linalg.norm(middle_tip_arr - wrist_arr) * 100
+
+                    text = f'thumb_index_dist: {thumb_index_dist}'
                     cv2.putText(frame, text, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,0,255), thickness=3, lineType=cv2.LINE_AA)
                     
-                    text = f'INDEX_FINGER_TIP: {int(index_tip.x*100)}, {int(index_tip.y*100)}, {int(index_tip.z*100)}'
+                    text = f'wrist_index_dist: {wrist_index_dist}'
                     cv2.putText(frame, text, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,255,0), thickness=3, lineType=cv2.LINE_AA)
                     
-                    text = f'MIDDLE_FINGER_TIP: {int(middle_tip.x*100)}, {int(middle_tip.y*100)}, {int(middle_tip.z*100)}'
+                    text = f'wrist_middle_dist: {wrist_middle_dist}'
                     cv2.putText(frame, text, (10,90), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (255,0,0), thickness=3, lineType=cv2.LINE_AA)
                     
-                    d = np.linalg.norm(
-                        np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z]) 
-                        - np.array([index_tip.x, index_tip.y, index_tip.z])) * 100
-                    text = f'dist: {d}'
-                    cv2.putText(frame, text, (10,120), cv2.FONT_HERSHEY_SIMPLEX, 1, 
-                                (255,0,0), thickness=3, lineType=cv2.LINE_AA)
+                    text = f'WRIST: {int(wrist.x*100)}, {int(wrist.y*100)}, {int(wrist.z*100)}'
+                    cv2.putText(frame, text, (int(cam_w*.5),30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (0,0,255), thickness=3, lineType=cv2.LINE_AA)
+                    
+                    text = f'MIDDLE_FINGER_TIP: {int(middle_tip.x*100)}, {int(middle_tip.y*100)}, {int(middle_tip.z*100)}'
+                    cv2.putText(frame, text, (int(cam_w*.5),60), cv2.FONT_HERSHEY_SIMPLEX, 1, 
+                                (0,255,0), thickness=3, lineType=cv2.LINE_AA)
                     
                     GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             # show frame
@@ -200,4 +215,4 @@ def click():
 
 
 if __name__ == '__main__':
-    click()
+    test()
