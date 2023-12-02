@@ -22,14 +22,17 @@ class Click(OneHandGestureBase):
         release - release
     '''
     AVAILABLE_STATES = [None, 'pinch', 'release']
-    def __init__(self, DISTANCE_THRESHOLD=3.0) -> None:
+    def __init__(self, DISTANCE_THRESHOLD1=3.0, DISTANCE_THRESHOLD2=3.0) -> None:
         '''
         Default initializer
 
-        DISTANCE_THRESHOLD: thumb tip and index finger tip distance threshold.
+        DISTANCE_THRESHOLD1: thumb tip and index finger tip distance threshold.
             when pinch. unit: %
+        DISTANCE_THRESHOLD2: while pinch, middle finger can move within this distance.
+            unit: %
         '''
-        self.DISTANCE_THRESHOLD = DISTANCE_THRESHOLD
+        self.DISTANCE_THRESHOLD1 = DISTANCE_THRESHOLD1
+        self.DISTANCE_THRESHOLD2 = DISTANCE_THRESHOLD2
         self.init()
     
     def init(self):
@@ -46,13 +49,13 @@ class Click(OneHandGestureBase):
         thumb_tip_arr = np.array([thumb_tip.x, thumb_tip.y, thumb_tip.z])
         index_tip_arr = np.array([index_tip.x, index_tip.y, index_tip.z])
         wrist_arr = np.array([wrist.x, wrist.y, wrist.z])
-        tip_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
+        thumb_index_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
         wrist_index_dist = np.linalg.norm(index_tip_arr - wrist_arr) * 100
 
         # if state 0
         if self.state == Click.AVAILABLE_STATES[0]:
             # if thumb and index finger are close together
-            if (tip_dist < self.DISTANCE_THRESHOLD):
+            if (thumb_index_dist < self.DISTANCE_THRESHOLD1):
                 self.state = Click.AVAILABLE_STATES[1]
                 self.wrist_index_dist = wrist_index_dist
                 self.middle_tip_arr = np.array([middle_tip.x, middle_tip.y, middle_tip.z])
@@ -64,10 +67,10 @@ class Click(OneHandGestureBase):
             middle_tip_dist = np.linalg.norm(self.middle_tip_arr - cur_middle_tip_arr) * 100
 
             # if thumb and index finger moves away from each other
-            if (self.DISTANCE_THRESHOLD < tip_dist):
-                # while middle finger is stopped
-                # and index finger moves up
-                if (middle_tip_dist < self.DISTANCE_THRESHOLD) and (self.wrist_index_dist < wrist_index_dist):
+            if (self.DISTANCE_THRESHOLD1 < thumb_index_dist):
+                # while index finger moves up
+                # and middle finger is stopped
+                if (self.wrist_index_dist < wrist_index_dist) and (middle_tip_dist < self.DISTANCE_THRESHOLD2):
                     self.state = Click.AVAILABLE_STATES[2]
                 else:
                     self.init()
@@ -155,7 +158,6 @@ def click():
     '''
     # Settings
     max_num_hands = 2
-    DISTANCE_THRESHOLD = 2.5
 
     recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
                                    max_num_hands=max_num_hands, download_model=False)
@@ -164,7 +166,7 @@ def click():
     cam = cv2.VideoCapture(0)
     cv2.namedWindow('webcam', cv2.WINDOW_AUTOSIZE) # this window size cannot change, automatically fit the img
 
-    click_mgr = OneHandGestureManager({'Left': Click(DISTANCE_THRESHOLD), 'Right': Click(DISTANCE_THRESHOLD)})
+    click_mgr = OneHandGestureManager({'Left': Click(), 'Right': Click()})
 
     while cam.isOpened():
         success, frame = cam.read() # get frame from cam
