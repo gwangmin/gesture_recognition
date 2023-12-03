@@ -15,20 +15,24 @@ from fistAndOpen import FistAndOpen
 
 # Settings
 max_num_hands = 2
-DISTANCE_THRESHOLD = {
-    Click: 3.0,
-    FingerSnap: 3.0,
+SETTINGS = {
+    Click: {
+        'DISTANCE_THRESHOLD1': 3.0,
+        'DISTANCE_THRESHOLD2': 3.0,
+    },
+    FingerSnap: {
+        'DISTANCE_THRESHOLD': 3.0,
+    },
 }
+
 # create recognizer
 recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
                                max_num_hands=max_num_hands, download_model=True)
 timestamp_ms = 0
 # prepare
-fingersnap_mgr = OneHandGestureManager({'Left': FingerSnap(DISTANCE_THRESHOLD[FingerSnap]), 'Right': FingerSnap(DISTANCE_THRESHOLD[FingerSnap])})
-click_mgr = OneHandGestureManager({'Left': Click(DISTANCE_THRESHOLD[Click]), 'Right': Click(DISTANCE_THRESHOLD[Click])})
+fingersnap_mgr = OneHandGestureManager({'Left': FingerSnap(**SETTINGS[FingerSnap]), 'Right': FingerSnap(**SETTINGS[FingerSnap])})
+click_mgr = OneHandGestureManager({'Left': Click(**SETTINGS[Click]), 'Right': Click(**SETTINGS[Click])})
 fao_mgr = OneHandGestureManager({'Left': FistAndOpen(), 'Right': FistAndOpen()})
-
-
 # define gesture_id
 NONE = 0
 FIST_MOVE = 3
@@ -37,7 +41,6 @@ id2mgr = {
     2: click_mgr,
     4: fingersnap_mgr,
 }
-
 mgr2id = {}
 for id, mgr in id2mgr.items():
     mgr2id[mgr] = id
