@@ -4,6 +4,11 @@ api for LDH game
 
 import cv2
 import numpy as np
+
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
+
 from lib import GestureRecognizer
 from lib import landmarks_num
 from lib import OneHandGestureManager
@@ -27,7 +32,7 @@ SETTINGS = {
 
 # create recognizer
 recognizer = GestureRecognizer(mode=GestureRecognizer.VIDEO,
-                               max_num_hands=max_num_hands, download_model=True)
+                               max_num_hands=max_num_hands, download_model=False)
 timestamp_ms = 0
 # prepare
 fingersnap_mgr = OneHandGestureManager({'Left': FingerSnap(**SETTINGS[FingerSnap]), 'Right': FingerSnap(**SETTINGS[FingerSnap])})
