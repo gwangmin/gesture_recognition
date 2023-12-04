@@ -281,13 +281,14 @@ class OneHandGestureManager:
         ret = self.instances[handedness_name].check(handedness_name, hand_landmarks, info)
         return ret
 
-    def handler(self, handedness_name):
+    def handler(self, handedness_name, *args):
         '''
         Call 'handler' on specified instance
         
         handedness_name: handedness display_name. 'Left' or 'Right'.
+        args: handler arguments.
         '''
-        self.instances[handedness_name].handler()
+        return self.instances[handedness_name].handler(*args)
 
 
 ### examples
