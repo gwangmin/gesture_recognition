@@ -57,7 +57,7 @@ class OneHandGestureBase:
             return True
         return False
     
-    def handler(self) -> Any:
+    def handler(self, *args: Any) -> Any:
         '''
         Default gesture handler.
 

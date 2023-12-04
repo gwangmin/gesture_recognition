@@ -8,7 +8,7 @@ gesture recognition library using mediapipe.
 - opencv-python 4.8.1
 - requests 2.31.0
 
-# How to execute gesture script
-'python -m gesture_recognizer.gestures.[gesture_name]' in gesture_recognition(prj root) dir.
+# How to run example script
+'python -m gesture_recognizer.examples.gesture_test' in gesture_recognition(prj root) dir.
 
 # todo
