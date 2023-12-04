@@ -75,7 +75,9 @@ class FingerSnap(OneHandGestureBase):
 
             # if thumb and middle finger moves away from each other
             # and index finger is up
-            if (self.DISTANCE_THRESHOLD < thumb_middle_dist) and (index_tip.y < middle_tip.y):
+            if (self.DISTANCE_THRESHOLD < thumb_middle_dist):
+                if not (index_tip.y < middle_tip.y):
+                    self.init()
                 if (self.thumb_middle_dist is None): # if first move, save additional progress info
                     self.thumb_middle_dist = thumb_middle_dist
                     self.wrist_middle_dist = wrist_middle_dist
