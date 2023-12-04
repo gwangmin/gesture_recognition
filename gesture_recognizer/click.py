@@ -5,11 +5,17 @@ Click gesture(pinching)
 import sys
 import cv2
 import numpy as np
-
-from lib import OneHandGestureBase
-from lib import OneHandGestureManager
-from lib import GestureRecognizer
-from lib import landmarks_num
+# non-relative import for test
+if __name__ == '__main__':
+    from lib import OneHandGestureBase
+    from lib import OneHandGestureManager
+    from lib import GestureRecognizer
+    from lib import landmarks_num
+else:
+    from .lib import OneHandGestureBase
+    from .lib import OneHandGestureManager
+    from .lib import GestureRecognizer
+    from .lib import landmarks_num
 
 
 class Click(OneHandGestureBase):
@@ -215,4 +221,4 @@ def click():
 
 
 if __name__ == '__main__':
-    test()
+    click()

@@ -5,11 +5,17 @@ Fist and Open gesture
 import sys
 import cv2
 import numpy as np
-
-from lib import OneHandGestureBase
-from lib import OneHandGestureManager
-from lib import GestureRecognizer
-from lib import landmarks_num
+# non-relative import for test
+if __name__ == '__main__':
+    from lib import OneHandGestureBase
+    from lib import OneHandGestureManager
+    from lib import GestureRecognizer
+    from lib import landmarks_num
+else:
+    from .lib import OneHandGestureBase
+    from .lib import OneHandGestureManager
+    from .lib import GestureRecognizer
+    from .lib import landmarks_num
 
 
 class FistAndOpen(OneHandGestureBase):
