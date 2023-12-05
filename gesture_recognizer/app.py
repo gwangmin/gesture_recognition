@@ -7,15 +7,21 @@ import numpy as np
 
 import os
 import sys
-sys.path.append(os.path.dirname(__file__))
 
-from lib import GestureRecognizer
-from lib import landmarks_num
-from lib import OneHandGestureManager
-
-from FingerSnap import FingerSnap
-from click import Click
-from fistAndOpen import FistAndOpen
+if __name__ == '__main__':
+    from lib import GestureRecognizer
+    from lib import landmarks_num
+    from lib import OneHandGestureManager
+    from FingerSnap import FingerSnap
+    from click import Click
+    from fistAndOpen import FistAndOpen
+else:
+    from .lib import GestureRecognizer
+    from .lib import landmarks_num
+    from .lib import OneHandGestureManager
+    from .FingerSnap import FingerSnap
+    from .click import Click
+    from .fistAndOpen import FistAndOpen
 
 
 # Settings
