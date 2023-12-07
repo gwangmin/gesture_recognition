@@ -56,11 +56,11 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
         self.mask = pg.mask.from_surface(self.image)
         
-        self.movement = pg.math.Vector2(1, 1)
-        self.speed = 0
+        self.movement = pg.math.Vector2()
+        self.speed = 6
     
-    def update(self):
-        self.movement = pg.math.Vector2(global_vars.px, global_vars.py)
+    def update(self, x, y):
+        self.movement = pg.math.Vector2(x, y)
         self.vpos = self.movement
         self.rect.center = (round(self.vpos.x), round(self.vpos.y))
         
@@ -129,12 +129,13 @@ class Player(pg.sprite.Sprite):
         bulletGroup.empty()
     
     def useShield(self):
-        self.savedShield -= 1
-        self.shield = True
-        self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
-        self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
-        self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)
+        if self.savedShield > 0:
+            self.savedShield -= 1
+            self.shield = True
+            self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
+            self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
+            self.rect = self.image.get_rect()
+            self.mask = pg.mask.from_surface(self.image)
     
     
 def firstMove(obj):
@@ -292,7 +293,7 @@ class Boss(pg.sprite.Sprite):
         self.kill()
     
     def drop(self, groups):
-        Item(groups=groups, pos=self.center)
+        Item(groups=groups, pos=self.rect.center)
     
     def update(self):
         pass

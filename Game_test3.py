@@ -62,7 +62,7 @@ pg.display.set_caption('Gesture Bomber')
 #pg.display.set_icon('assets/spr_shield.png')
 clock = pg.time.Clock()
 prev_time = 0
-FPS = 30
+FPS = 60
 
 def main(queue):
     # background setting
@@ -167,6 +167,7 @@ def Game(q):
                 ypos = gestureEvent[1]['xyz'][1]
                 px = xpos * SCREEN_WIDTH
                 py = ypos * SCREEN_HEIGHT
+                print(px, py)
 
                 pg.event.post(pg.event.Event(MOVE_EVENT))
             elif gestureEvent[0] == 4:
@@ -188,10 +189,11 @@ def Game(q):
                     spawn(randint(1,3), foeGroup)
                 count += 1
         
-            if event.type == OPENPALM_EVENT:
+            if event.type == OPENPALM_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_DOWN):
                 print('shield')
                 player.useShield()
-            if event.type == FINGERSNAP_EVENT:
+                player.draw(screen)
+            if event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
                 print('bomb')
                 player.useBomb(fBulletGroup)
             if event.type == PINCH_EVENT:
@@ -199,7 +201,7 @@ def Game(q):
             
             if event.type == MOVE_EVENT:
                 print('move')
-                player.update()
+                player.update(px, py)
             if event.type == F_FIRE_EVENT:
                 for foe in foeGroup:
                     foe.fire(fBulletGroup)
@@ -228,7 +230,7 @@ def Game(q):
         for i in item:
             player.getItem(i.itemName)
                 
-        player.update()            
+        player.update(px, py)            
         foeGroup.update()
         pBulletGroup.update()
         fBulletGroup.update()
