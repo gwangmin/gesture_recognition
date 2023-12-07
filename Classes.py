@@ -118,6 +118,7 @@ class Player(pg.sprite.Sprite):
         if self.shield:
             self.shield = False
             self.image = global_vars.SHIPS['PLAYER'].convert_alpha()
+            self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
             self.rect = self.image.get_rect()
             self.mask = pg.mask.from_surface(self.image)
         else:
