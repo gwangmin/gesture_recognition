@@ -138,12 +138,12 @@ class Player(pg.sprite.Sprite):
     
     
 def firstMove(obj):
-    for dt in range(0, int(global_vars.SCREEN_HEIGHT / 10), 10):
-        obj.rect.centery += dt
+    # animate enemy
+    pass
     
     
 class Foe(pg.sprite.Sprite):
-    y = 200
+    y = 100
     
     def __init__(self, groups, foeType, xpos, life=1, speed=1):
         super().__init__()
@@ -165,7 +165,7 @@ class Foe(pg.sprite.Sprite):
         self.speed = speed
         
         self.add(groups)
-        #firstMove(self)
+        firstMove(self)
                     
     def fire(self, groups):
         if self.foeType == 'F':
@@ -191,7 +191,7 @@ class Foe(pg.sprite.Sprite):
         surf.blit(self.image, self.rect)
 
 class MiniBoss(pg.sprite.Sprite):
-    y = 200
+    y = 100
 
     def __init__(self, groups, xpos, life=5, speed=1):
         super().__init__()
@@ -205,7 +205,7 @@ class MiniBoss(pg.sprite.Sprite):
         
         self.rect.center = (xpos, self.y)
         self.add(groups)
-        #firstMove(self)
+        firstMove(self)
     
     def move(self, dt):
         if randint(0, 2000) < 2:
@@ -214,7 +214,8 @@ class MiniBoss(pg.sprite.Sprite):
         if self.y_angle:
             if self.y < self.old_y + global_vars.SCALED_SPRITE_SIZE:
                 self.y += self.speed * dt
-            else: self.y_angle = False
+            else:
+                self.y_angle = False
         else:
             if self.angle:
                 self.x += self.speed * dt
@@ -250,7 +251,7 @@ class MiniBoss(pg.sprite.Sprite):
 
 class Boss(pg.sprite.Sprite):
 
-    y = 200
+    y = 100
 
     def __init__(self, groups, life=10, speed=0):
         super().__init__()
@@ -267,12 +268,13 @@ class Boss(pg.sprite.Sprite):
         
         self.add(groups)
         
-        #firstMove(self)
+        firstMove(self)
                     
     def fire(self, groups):
         Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True)
         Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=45)
         Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=-45)
+        # 유도탄
 
     def loseLife(self, damage):
         self.life -= damage

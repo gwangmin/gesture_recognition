@@ -124,6 +124,7 @@ def main(queue):
             gameClear(queue)
         else:
             gameOver(queue)
+        input()
 
 def showTitle(q):
 
@@ -180,9 +181,10 @@ def Game(q):
     
     spawnDelay = 1000 * 5     # spawn delay
     pg.time.set_timer(SPAWN_EVENT, spawnDelay)
-    fireDelay = 1000 * 1
-    pg.time.set_timer(F_FIRE_EVENT, fireDelay)
-    pg.time.set_timer(P_FIRE_EVENT, fireDelay)
+    pFireDelay = int(1000 * 0.8)
+    fFireDelay = 1000 * 1
+    pg.time.set_timer(F_FIRE_EVENT, pFireDelay)
+    pg.time.set_timer(P_FIRE_EVENT, fFireDelay)
 
     
     while True:
