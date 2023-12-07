@@ -41,7 +41,7 @@ prev_time = 0
 FPS = 30
 
 def controller(q):
-    global px, py
+    global px, py, prev_time
     print('Controller run started')
     '''cv2 videocapture 생성'''
     webcam = cv2.VideoCapture(0)
@@ -54,8 +54,10 @@ def controller(q):
         current_time = time() - prev_time
         
         if (current_time > 1 / FPS) and status :
-            recognition = api.gesture_recognizer()
+            recognition = api.gesture_recognizer(frame)
             gestureEvent = recognition[1][0]
+            
+            prev_time = time()
                 
             if gestureEvent == 1:
                 q.put(OPENPALM_EVENT)
