@@ -114,7 +114,7 @@ def test():
             text = f'{result[1]}'
             cv2.putText(result[0], text, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                                 (0,0,255), thickness=3, lineType=cv2.LINE_AA)
-            
+            print(result[1][0][0])
             # show frame
             cv2.imshow('webcam', result[0])
             if cv2.waitKey(delay=1) == ord('q'):

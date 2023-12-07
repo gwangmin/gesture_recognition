@@ -65,20 +65,20 @@ def controller(q):
                 q.put(PINCH_EVENT)
             elif gestureEvent == 3:
                     # save position
-                xpos = recognition[1]['xyz'][0]
-                ypos = recognition[1]['xyz'][1]
+                xpos = gestureEvent[1]['xyz'][0]
+                ypos = gestureEvent[1]['xyz'][1]
                 px = xpos * SCREEN_WIDTH
                 py = ypos * SCREEN_HEIGHT
                     
                 q.put(MOVE_EVENT)
             elif gestureEvent == 4:
                 q.put(FINGERSNAP_EVENT)
-        '''
+        
         if cv2.waitKey(1) and 0xFF == ord('q'):
-            #webcam.release()
-            #cv2.destroyAllWindows()
             break
-        '''
+        
+    webcam.release()
+    cv2.destroyAllWindows()
 
 def spawn(n, renderPlain):
 
