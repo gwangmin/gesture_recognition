@@ -46,20 +46,22 @@ def controller(q):
             
             prev_time = time()
                 
-            if gestureEvent == 1:
+            if gestureEvent[0] == 1:
                 q.put(OPENPALM_EVENT)
-            elif gestureEvent == 2:
+            elif gestureEvent[0] == 2:
                 q.put(PINCH_EVENT)
-            elif gestureEvent == 3:
+            elif gestureEvent[0] == 3:
                     # save position
                 xpos = gestureEvent[1]['xyz'][0]
                 ypos = gestureEvent[1]['xyz'][1]
+                print(xpos, ypos)
                 px = xpos * SCREEN_WIDTH
                 py = ypos * SCREEN_HEIGHT
                     
                 q.put(MOVE_EVENT)
-            elif gestureEvent == 4:
+            elif gestureEvent[0] == 4:
                 q.put(FINGERSNAP_EVENT)
+
         
         if cv2.waitKey(1) and 0xFF == ord('q'):
             break

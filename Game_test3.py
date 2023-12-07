@@ -157,20 +157,21 @@ def Game(q):
             
             prev_time = time()
                 
-            if gestureEvent == 1:
-                pg.event.post(OPENPALM_EVENT)
-            elif gestureEvent == 2:
-                pg.event.post(PINCH_EVENT)
-            elif gestureEvent == 3:
-                # save position
+            if gestureEvent[0] == 1:
+                q.put(OPENPALM_EVENT)
+            elif gestureEvent[0] == 2:
+                q.put(PINCH_EVENT)
+            elif gestureEvent[0] == 3:
+                    # save position
                 xpos = gestureEvent[1]['xyz'][0]
                 ypos = gestureEvent[1]['xyz'][1]
+                print(xpos, ypos)
                 px = xpos * SCREEN_WIDTH
                 py = ypos * SCREEN_HEIGHT
                     
-                pg.event.post(MOVE_EVENT)
-            elif gestureEvent == 4:
-                pg.event.post(FINGERSNAP_EVENT)
+                q.put(MOVE_EVENT)
+            elif gestureEvent[0] == 4:
+                q.put(FINGERSNAP_EVENT)
 
         # game event handling
         for event in pg.event.get():
