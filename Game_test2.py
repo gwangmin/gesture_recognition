@@ -36,6 +36,7 @@ pg.init()
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pg.display.set_caption('Gesture Bomber')
 #pg.display.set_icon('assets/spr_shield.png')
+clock = pg.time.Clock()
 prev_time = 0
 FPS = 30
 
@@ -70,24 +71,49 @@ def controller(q):
                 q.put(MOVE_EVENT)
             elif gestureEvent == 4:
                 q.put(FINGERSNAP_EVENT)
-            
+        '''
         if cv2.waitKey(1) and 0xFF == ord('q'):
             #webcam.release()
             #cv2.destroyAllWindows()
             break
+        '''
 
+def spawn(n, renderPlain):
 
-
+    if n == 1:
+        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.2).add(renderPlain)
+        #Foe(groups=renderPlain, foeType='F', xpos=firstMove(self)SCREEN_WIDTH * 0.1)
+        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.8).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(renderPlain)
+    if n == 2:
+        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.3).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.5).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.7).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(renderPlain)
+        
+    if n == 3:
+        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.3).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.4).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.5).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.6).add(renderPlain)
+        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.7).add(renderPlain)
+        
+    if n == 4:
+        Classes.MiniBoss(groups=renderPlain, xpos=SCREEN_WIDTH * 0.25).add(renderPlain)
+        Classes.MiniBoss(groups=renderPlain, xpos=SCREEN_WIDTH * 0.75).add(renderPlain)
+    if n == 5:
+        Classes.Boss(groups=renderPlain).add(renderPlain)
+    
+        
 
 def main(queue):
-    clock = pg.time.Clock()
     # background setting
     BACKGROUND_COLOR = pg.Color(80, 97, 125)
     screen.fill(BACKGROUND_COLOR)
     pg.display.update()
     lastTime = time()
-    
-    clock.tick(FPS)
     # Title
     showTitle(queue)
     while True:
@@ -130,9 +156,10 @@ def showTitle(q):
                 pg.display.update()
                 return
             
-
+count = 0
     
 def Game(q):
+    global count, FPS, clock
     print('Game')
     screen.fill((40, 200, 200))
 
@@ -144,15 +171,19 @@ def Game(q):
 
     count = 0
         
-    playerGroup = pg.sprite.RenderPlain()
-    foeGroup = pg.sprite.RenderPlain()
-    pBulletGroup = pg.sprite.RenderPlain()
-    fBulletGroup = pg.sprite.RenderPlain()
+    playerGroup = pg.sprite.Group()
+    foeGroup = pg.sprite.Group()
+    pBulletGroup = pg.sprite.Group()
+    fBulletGroup = pg.sprite.Group()
     
     player = Classes.Player(pos=(px, py))
     
-    spawnDelay = 1000 * 15     # spawn delay
+    spawnDelay = 1000 * 5     # spawn delay
     pg.time.set_timer(SPAWN_EVENT, spawnDelay)
+    fireDelay = 1000 * 1
+    pg.time.set_timer(F_FIRE_EVENT, fireDelay)
+    pg.time.set_timer(P_FIRE_EVENT, fireDelay)
+
     
     while True:
         # hand tracking event get
@@ -163,15 +194,16 @@ def Game(q):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
-                sys.quit()
+                sys.exit()
                 
             if event.type == SPAWN_EVENT:
+                print(f'spawn: {count}, {len(foeGroup)}')
                 if count == 6:                
-                    Classes.spawn(4, foeGroup)
+                    spawn(4, foeGroup)
                 elif count == 12:
-                    Classes.spawn(5, foeGroup)
+                    spawn(5, foeGroup)
                 elif count < 12:
-                    Classes.spawn(randint(1,3), foeGroup)
+                    spawn(randint(1,3), foeGroup)
                 count += 1
         
             if event.type == OPENPALM_EVENT:
@@ -180,43 +212,52 @@ def Game(q):
                 player.useBomb(fBulletGroup)
             
             if event.type == MOVE_EVENT:
-                player.movement = pg.math.Vector2(px, py).normalize()
-                player.vpos += player.movement * player.speed
-                player.rect.center = (round(player.vpos.x), round(player.vpos.y))
+                player.update()
+            if event.type == F_FIRE_EVENT:
+                for foe in foeGroup:
+                    foe.fire(fBulletGroup)
+            if event.type == P_FIRE_EVENT:
+                player.fire(pBulletGroup)
 
         # collision check
         if pg.sprite.spritecollide(player, fBulletGroup, dokill=False, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
+            print(player.getLife())
 
         if pg.sprite.spritecollide(player, foeGroup, dokill=False, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
                 
-        foeDict = pg.sprite.groupcollide(foeGroup, pBulletGroup, dokilla=False, dokillb=True, collided=pg.sprite.collide_mask)
-        for i in foeDict.keys():
-            foeDict[i].loseLife()
+        foeDict = pg.sprite.groupcollide(pBulletGroup, foeGroup, dokilla=True, dokillb=False, collided=pg.sprite.collide_mask)
+        for bullet in foeDict:
+            for foe in foeDict[bullet]: 
+                foe.loseLife(1)
                 
         # item handling
             #if pg.sprite.collide_mask(self.player, item)
+            
+        foeGroup.update()
+        pBulletGroup.update()
+        fBulletGroup.update()
+        player.update()
 
+        screen.fill((40, 200, 200))       
+        foeGroup.draw(screen)
         pBulletGroup.draw(screen)
         fBulletGroup.draw(screen)
         player.draw(screen)
     
-        pBulletGroup.update(screen)
-        fBulletGroup.update(screen)
-        player.update(screen)
-        
+        pg.display.update()
         pg.display.flip()
+        clock.tick(FPS)
 
         # game over or game clear
         if player.getLife() == 0:
             return False
         
-        if len(foeGroup) < 1:
+        if len(foeGroup) < 1 and count > 12:
             return True
-
 
 def gameOver(q):
     print('GameOver')
@@ -236,9 +277,11 @@ def gameOver(q):
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
-            sys.quit()
+            sys.exit()
         if event.type == PINCH_EVENT:
             return
+    
+    pg.display.update()
             
 
 def gameClear(q):
@@ -258,10 +301,11 @@ def gameClear(q):
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
-            sys.quit()
+            sys.exit()
         if event.type == PINCH_EVENT:
             return
         
+    pg.display.update()
 
 if __name__ == '__main__':
     q = Queue()

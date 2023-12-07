@@ -17,6 +17,8 @@ MOVE_EVENT = pg.USEREVENT + 3
 FINGERSNAP_EVENT = pg.USEREVENT + 4
 
 SPAWN_EVENT = pg.USEREVENT + 5
+F_FIRE_EVENT = pg.USEREVENT + 6
+P_FIRE_EVENT = pg.USEREVENT + 7
 
 CONTROLS = {
     'UP':       [pg.K_w, pg.K_UP],
@@ -41,7 +43,7 @@ BUTTON_HEIGHT = SCREEN_WIDTH * 0.2
 # initialize player x, y position
 px, py = SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.8
 
-SPRITE_SIZE = 16
+SPRITE_SIZE = 32
 SCALED_SPRITE_SIZE = SPRITE_SIZE * 4
 
 # ship image
@@ -50,8 +52,8 @@ spriteSheet = pg.image.load(spriteSheetFile)
 
 
 SHIPS = {
-    'PLAYER': spriteSheet.subsurface(0, 1300, 256, 200),
-    'SHIELDED': spriteSheet.subsurface(0, 1100, 256, 200),
+    'PLAYER': spriteSheet.subsurface(0, 1100, 256, 200),
+    'SHIELDED': spriteSheet.subsurface(0, 1300, 256, 200),
     'FGRADE': spriteSheet.subsurface(0, 900, 256, 200),
     'DGRADE': spriteSheet.subsurface(0, 700, 256, 200),
     'CGRADE': spriteSheet.subsurface(0, 500, 256, 200),

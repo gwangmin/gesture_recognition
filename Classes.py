@@ -14,11 +14,11 @@ import global_vars
 class Item(pg.sprite.Sprite):
     speed = 7
     def __init__(self, groups, pos):
-        super().__init__(self)
+        super().__init__()
         self.itemName = choice(global_vars.ITEMS.keys())
         
         self.image = pg.image.load(global_vars.ITEMS[self.itemName]).convert_alpha()
-        self.image = pg.transform.scale(self.image, global_vars.SCALED_SPRITE_SIZE, 24*4)
+        self.image = pg.transform.scale(self.image, global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE)
         # self.image.set_colorkey()
         
         self.rect = self.image.get_rect(center=pos)
@@ -39,14 +39,14 @@ class Item(pg.sprite.Sprite):
 
 # Characters
 class Player(pg.sprite.Sprite):
-    life = 3            # life
+    life = 400            # life
     
     # test용 아이템
     bomb = 2
     savedShield = 2
     # test용 아이템
     shield = False
-    power = 0
+    power = 4
     
     def __init__(self, pos):
         super().__init__()
@@ -60,12 +60,13 @@ class Player(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
         
         self.movement = pg.math.Vector2(1, 1)
-        self.speed = 7
+        self.speed = 0
     
-    def update(self, surf):
-        self.draw(surf)
+    def update(self):
+        self.movement = pg.math.Vector2(global_vars.px, global_vars.py).normalize()
+        self.vpos += self.movement * self.speed
+        self.rect.center = (round(self.vpos.x), round(self.vpos.y))
 
-    
     def draw(self, surf):
         surf.blit(self.image, self.rect)
         
@@ -88,25 +89,25 @@ class Player(pg.sprite.Sprite):
     
     def fire(self, groups):
         if self.power == 0:
-            Bullet(groups, 'SmallOne', self.pos+self.rect.width*0.4)
-            Bullet(groups, 'SmallOne', self.pos-self.rect.width*0.4)
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
         if self.power == 1:
-            Bullet(groups, 'SmallTwo', self.pos+self.rect.width*0.4)
-            Bullet(groups, 'SmallTwo', self.pos-self.rect.width*0.4)
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
         if self.power == 2:
-            Bullet(groups, 'BigOne', self.pos+self.rect.width*0.4)
-            Bullet(groups, 'BigOne', self.pos-self.rect.width*0.4)
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
         if self.power == 3:
-            Bullet(groups, 'BigOne', self.pos+self.rect.width*0.4)
-            Bullet(groups, 'BigOne', self.pos-self.rect.width*0.4)
-            Bullet(groups, 'SmallOne', self.pos+self.rect.width*0.4, angle=45)
-            Bullet(groups, 'SmallOne', self.pos-self.rect.width*0.4, angle=-45)
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), angle=45)
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), angle=-45)
             
         if self.power == 4:
-            Bullet(groups, 'BigOne', self.pos+self.rect.width*0.4)
-            Bullet(groups, 'BigOne', self.pos-self.rect.width*0.4)
-            Bullet(groups, 'SmallOne', self.pos+self.rect.width*0.4, angle=45)
-            Bullet(groups, 'SmallOne', self.pos-self.rect.width*0.4, angle=-45)
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), angle=45)
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), angle=-45)
             
         
     def getLife(self):
@@ -120,7 +121,7 @@ class Player(pg.sprite.Sprite):
             self.mask = pg.mask.from_surface(self.image)
         else:
             self.life -= 1
-            self.rect.center(self.firstpos)
+            self.rect.center = self.firstpos
             # when player dies something... happen
         
     def useBomb(self, bulletGroup):
@@ -133,20 +134,19 @@ class Player(pg.sprite.Sprite):
         self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
         self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
         self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)     
+        self.mask = pg.mask.from_surface(self.image)
     
     
 def firstMove(obj):
-    for dt in range(0, global_vars.SCREEN_HEIGHT / 10, 10):
+    for dt in range(0, int(global_vars.SCREEN_HEIGHT / 10), 10):
         obj.rect.centery += dt
     
     
 class Foe(pg.sprite.Sprite):
-    image = None
-    rect = None
+    y = 200
     
     def __init__(self, groups, foeType, xpos, life=1, speed=1):
-        super().__init__(self)
+        super().__init__()
         self.foeType = foeType
         
         # image load
@@ -158,24 +158,24 @@ class Foe(pg.sprite.Sprite):
             self.image = global_vars.SHIPS['CGRADE'].convert_alpha()
 
         self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
-        self.rect = self.image.get_rect(center=(xpos, 0))
+        self.rect = self.image.get_rect(center=(xpos, self.y))
         self.mask = pg.mask.from_surface(self.image)
         
         self.life = life
         self.speed = speed
         
-        groups.add()
-        firstMove(self)
+        self.add(groups)
+        #firstMove(self)
                     
     def fire(self, groups):
         if self.foeType == 'F':
-            Bullet(groups, self.rect.center, 'SmallOne', isFoe=True)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True)
         elif self.foeType == 'D':
-            Bullet(groups, self.rect.center, 'SmallOne', isFoe=True, angle=45)
-            Bullet(groups, self.rect.center, 'SmallOne', isFoe=True, angle=-45)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, angle=45)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, angle=-45)
         elif self.foeType == 'C':
             # 유도탄 함수
-            Bullet(groups, self.rect.center, 'SmallOne', isFoe=True)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True)
             
     def loseLife(self, damage):
         self.death()
@@ -184,16 +184,14 @@ class Foe(pg.sprite.Sprite):
         # drop item, animate
         self.kill()
     
-    def update(self, surf):
-        self.draw(surf)
+    def update(self):
+        pass
     
     def draw(self, surf):
         surf.blit(self.image, self.rect)
 
 class MiniBoss(pg.sprite.Sprite):
-    image = None
-    rect = None
-    y = 0
+    y = 200
 
     def __init__(self, groups, xpos, life=5, speed=1):
         super().__init__()
@@ -205,9 +203,9 @@ class MiniBoss(pg.sprite.Sprite):
         self.life = life
         self.speed = speed
         
-        self.rect.center = (xpos, 0)
-        groups.add()
-        firstMove(self)
+        self.rect.center = (xpos, self.y)
+        self.add(groups)
+        #firstMove(self)
     
     def move(self, dt):
         if randint(0, 2000) < 2:
@@ -230,9 +228,9 @@ class MiniBoss(pg.sprite.Sprite):
                     self.angle = True
                     
     def fire(self, groups):
-        Bullet(groups, 'SmallOne', self.rect.center, isFoe=True)
-        Bullet(groups, 'SmallOne', self.rect.center, isFoe=True, angle=45)
-        Bullet(groups, 'SmallOne', self.rect.center, isFoe=True, angle=-45)
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True)
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, angle=45)
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, angle=-45)
         
     def loseLife(self, damage):
         self.life -= damage
@@ -241,42 +239,40 @@ class MiniBoss(pg.sprite.Sprite):
 
     def death(self):
         # drop item, animate
-        
         self.kill()
     
-    def update(self, surf):
-        self.draw(surf)
-
+    def update(self):
+        pass
     
     def draw(self, surf):
         surf.blit(self.image, self.rect)
 
 
 class Boss(pg.sprite.Sprite):
-    image = None
-    rect = None
+
+    y = 200
 
     def __init__(self, groups, life=10, speed=0):
-        super().__init__(self)
+        super().__init__()
         self.image = global_vars.SHIPS['BOSS'].convert_alpha()
         self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
         self.rect = self.image.get_rect()
         self.mask = pg.mask.from_surface(self.image)
         
-        self.rect.center = (global_vars.SCREEN_WIDTH * 0.5, 0)
+        self.rect.center = (global_vars.SCREEN_WIDTH * 0.5, self.y)
         
         # global_vars.SHIPS{}
         self.life = life
         self.speed = speed
         
-        groups.add()
+        self.add(groups)
         
-        firstMove(self)
+        #firstMove(self)
                     
     def fire(self, groups):
-        Bullet(groups, 'BigOne', self.rect.center, isFoe=True)
-        Bullet(groups, 'BigOne', self.rect.center, isFoe=True, angle=45)
-        Bullet(groups, 'BigOne', self.rect.center, isFoe=True, angle=-45)
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True)
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=45)
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=-45)
 
     def loseLife(self, damage):
         self.life -= damage
@@ -288,8 +284,8 @@ class Boss(pg.sprite.Sprite):
         
         self.kill()
     
-    def update(self, surf):
-        self.draw(surf)
+    def update(self):
+        pass
     
     def draw(self, surf):
         surf.blit(self.image, self.rect)
@@ -299,9 +295,8 @@ class Bullet(pg.sprite.Sprite):
     speed = 12
     
     def __init__(self, groups, kinds, pos, isFoe=False, angle=None):
-        super().__init__(self)
+        super().__init__()
         # 쏘는 객체의 위치, 벡터 값
-        self.x, self.y = pos
         self.vpos = pg.math.Vector2(pos)
         
         self.isFoe = isFoe
@@ -317,50 +312,21 @@ class Bullet(pg.sprite.Sprite):
             
         self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
         if angle != None:
-            self.v_vm = self.v_vm.rotate(angle=angle) * self.speed
-            self.image = pg.transform.rotate(self.angle)
+            self.v_vm = self.v_vm.rotate(self.angle)
+            self.image = pg.transform.rotate(self.image, -self.angle)
         
         self.rect = self.image.get_rect(center=pos)
         self.mask = pg.mask.from_surface(self.image)
-        groups.add()
+        self.add(groups)
         
-    def update(self, surf):
-        
+    def update(self):
         # collide
         
         # bullet move
-        self.vpos += self.v_vm
-        self.draw(surf)
-            
-
+        self.vpos += self.v_vm * self.speed
+        self.rect.x = self.vpos.x
+        self.rect.y = self.vpos.y
+        
 
     def draw(self, surf):
         surf.blit(self.image, self.rect)
-        
-def spawn(n, renderPlain):
-    if n == 1:
-        Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.1)
-        Foe(groups=renderPlain, foeType='D', xpos=global_vars.SCREEN_WIDTH * 0.2)
-        #Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.1)
-        Foe(groups=renderPlain, foeType='D', xpos=global_vars.SCREEN_WIDTH * 0.8)
-        Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.9)
-    if n == 2:
-        Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.1)
-        Foe(groups=renderPlain, foeType='D', xpos=global_vars.SCREEN_WIDTH * 0.3)
-        Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.5)
-        Foe(groups=renderPlain, foeType='D', xpos=global_vars.SCREEN_WIDTH * 0.7)
-        Foe(groups=renderPlain, foeType='F', xpos=global_vars.SCREEN_WIDTH * 0.9)
-        
-    if n == 3:
-        Foe(groups=renderPlain, foeType='C', xpos=global_vars.SCREEN_WIDTH * 0.3)
-        Foe(groups=renderPlain, foeType='C', xpos=global_vars.SCREEN_WIDTH * 0.4)
-        Foe(groups=renderPlain, foeType='C', xpos=global_vars.SCREEN_WIDTH * 0.5)
-        Foe(groups=renderPlain, foeType='C', xpos=global_vars.SCREEN_WIDTH * 0.6)
-        Foe(groups=renderPlain, foeType='C', xpos=global_vars.SCREEN_WIDTH * 0.7)
-        
-    if n == 4:
-        MiniBoss(groups=renderPlain, pos=global_vars.SCREEN_WIDTH * 0.25)
-        MiniBoss(groups=renderPlain, pos=global_vars.SCREEN_WIDTH * 0.75)
-    if n == 5:
-        Boss(groups=renderPlain)
-        
