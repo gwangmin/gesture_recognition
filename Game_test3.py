@@ -196,8 +196,18 @@ def Game(q):
             if event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
                 print('bomb')
                 player.useBomb(fBulletGroup)
-            if event.type == PINCH_EVENT:
+                
+            if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
                 print('pinch')
+                pause = sysfont.render('Pause', True, (0,0,0))
+                screen.fill((255,255,255))
+                screen.blit(pause, rect)
+                pg.display.update()
+                paused = True
+                while paused:
+                    for event in pg.event.get():
+                        if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
+                            paused = False
             
             if event.type == MOVE_EVENT:
                 print('move')
