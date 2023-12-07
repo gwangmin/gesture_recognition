@@ -63,9 +63,10 @@ class Player(pg.sprite.Sprite):
         self.speed = 0
     
     def update(self):
-        self.movement = pg.math.Vector2(global_vars.px, global_vars.py).normalize()
-        self.vpos += self.movement * self.speed
+        self.movement = pg.math.Vector2(global_vars.px, global_vars.py)
+        self.vpos = self.movement
         self.rect.center = (round(self.vpos.x), round(self.vpos.y))
+        
 
     def draw(self, surf):
         surf.blit(self.image, self.rect)

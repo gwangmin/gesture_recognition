@@ -158,20 +158,19 @@ def Game(q):
             prev_time = time()
                 
             if gestureEvent[0] == 1:
-                q.put(OPENPALM_EVENT)
+                pg.event.post(pg.event.Event(OPENPALM_EVENT))
             elif gestureEvent[0] == 2:
-                q.put(PINCH_EVENT)
+                pg.event.post(pg.event.Event(PINCH_EVENT))
             elif gestureEvent[0] == 3:
-                    # save position
+                # save position
                 xpos = gestureEvent[1]['xyz'][0]
                 ypos = gestureEvent[1]['xyz'][1]
-                print(xpos, ypos)
                 px = xpos * SCREEN_WIDTH
                 py = ypos * SCREEN_HEIGHT
-                    
-                q.put(MOVE_EVENT)
+
+                pg.event.post(pg.event.Event(MOVE_EVENT))
             elif gestureEvent[0] == 4:
-                q.put(FINGERSNAP_EVENT)
+                pg.event.post(pg.event.Event(FINGERSNAP_EVENT))
 
         # game event handling
         for event in pg.event.get():
@@ -195,8 +194,11 @@ def Game(q):
             if event.type == FINGERSNAP_EVENT:
                 print('bomb')
                 player.useBomb(fBulletGroup)
+            if event.type == PINCH_EVENT:
+                print('pinch')
             
             if event.type == MOVE_EVENT:
+                print('move')
                 player.update()
             if event.type == F_FIRE_EVENT:
                 for foe in foeGroup:
