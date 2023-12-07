@@ -132,7 +132,7 @@ def Game(q):
 
     count = 0
         
-    playerGroup = pg.sprite.Group()
+    itemGroup = pg.sprite.Group()
     foeGroup = pg.sprite.Group()
     pBulletGroup = pg.sprite.Group()
     fBulletGroup = pg.sprite.Group()
@@ -207,7 +207,7 @@ def Game(q):
                 player.fire(pBulletGroup)
 
         # collision check
-        if pg.sprite.spritecollide(player, fBulletGroup, dokill=False, 
+        if pg.sprite.spritecollide(player, fBulletGroup, dokill=True, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
             print(player.getLife())
@@ -220,20 +220,26 @@ def Game(q):
         for bullet in foeDict:
             for foe in foeDict[bullet]: 
                 foe.loseLife(1)
+                if foe.life < 1:
+                    foe.death(itemGroup)
                 
         # item handling
-            #if pg.sprite.collide_mask(self.player, item)
-            
+        item = pg.sprite.spritecollide(player, itemGroup, dokill=True, collided=pg.sprite.collide_mask)
+        for i in item:
+            player.getItem(i.itemName)
+                
+        player.update()            
         foeGroup.update()
         pBulletGroup.update()
         fBulletGroup.update()
-        player.update()
+        itemGroup.update()
 
         screen.fill((40, 200, 200))       
+        player.draw(screen)
         foeGroup.draw(screen)
         pBulletGroup.draw(screen)
         fBulletGroup.draw(screen)
-        player.draw(screen)
+        itemGroup.draw(screen)
     
         pg.display.update()
         pg.display.flip()

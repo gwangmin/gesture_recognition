@@ -1,4 +1,3 @@
-
 import pygame as pg
 from random import randint, choice
 from time import time
@@ -15,26 +14,24 @@ class Item(pg.sprite.Sprite):
     speed = 7
     def __init__(self, groups, pos):
         super().__init__()
-        self.itemName = choice(global_vars.ITEMS.keys())
+        self.itemName = choice(list(global_vars.ITEMS.keys()))
         
-        self.image = pg.image.load(global_vars.ITEMS[self.itemName]).convert_alpha()
-        self.image = pg.transform.scale(self.image, global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE)
+        self.image = global_vars.ITEMS[self.itemName].convert_alpha()
+        self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
         # self.image.set_colorkey()
         
         self.rect = self.image.get_rect(center=pos)
+        self.add(groups)
     
-    def update(self, args, kwargs):
-        
-        # collide
-
+    def update(self):
         # fall
-        pass
+        self.fall()
     
     def draw(self, surf):
         surf.blit(self.image, self.rect)
         
     def fall(self):
-        self.centery += self.speed
+        self.rect.centery += self.speed
         
 
 # Characters
@@ -42,11 +39,11 @@ class Player(pg.sprite.Sprite):
     life = 400            # life
     
     # test용 아이템
-    bomb = 2
-    savedShield = 2
+    bomb = 10
+    savedShield = 10
     # test용 아이템
     shield = False
-    power = 4
+    power = 0
     
     def __init__(self, pos):
         super().__init__()
@@ -80,6 +77,7 @@ class Player(pg.sprite.Sprite):
         if itemName == '1timeshield':
             self.shield = True
             self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
+            self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
             self.rect = self.image.get_rect()
             self.mask = pg.mask.from_surface(self.image)
         if itemName == 'Bomb':
@@ -180,11 +178,15 @@ class Foe(pg.sprite.Sprite):
             Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True)
             
     def loseLife(self, damage):
-        self.death()
+        self.life -= damage
 
-    def death(self):
+    def death(self, groups):
         # drop item, animate
+        self.drop(groups)
         self.kill()
+    
+    def drop(self, groups):
+        Item(groups=groups, pos=self.rect.center)
     
     def update(self):
         pass
@@ -237,12 +239,15 @@ class MiniBoss(pg.sprite.Sprite):
         
     def loseLife(self, damage):
         self.life -= damage
-        if self.life < 1:
-            self.death()
 
-    def death(self):
+    def death(self, groups):
         # drop item, animate
+        self.drop(groups)
         self.kill()
+    
+    def drop(self, groups):
+        Item(groups=groups, pos=self.rect.center)
+    
     
     def update(self):
         pass
@@ -280,19 +285,20 @@ class Boss(pg.sprite.Sprite):
 
     def loseLife(self, damage):
         self.life -= damage
-        if self.life < 1:
-            self.death()
 
-    def death(self):
+    def death(self, groups):
         # drop item, animate
-        
+        self.drop(groups)
         self.kill()
+    
+    def drop(self, groups):
+        Item(groups=groups, pos=self.center)
     
     def update(self):
         pass
     
     def draw(self, surf):
-        surf.blit(self.image, self.rect)
+        surf.blit(self.image, self.rect.center)
 
 # bullet
 class Bullet(pg.sprite.Sprite):

@@ -75,11 +75,14 @@ FBULLETS = {
     'BigOne': spriteSheet.subsurface(340, 1100, 80, 100),
     'BigTwo': spriteSheet.subsurface(340, 1200, 80, 100)
 }
+
+itemSheetFile = 'assets/i_are_spaceship.png'
+itemSheet = pg.image.load(itemSheetFile)
     
 ITEMS = {
-    'Powerup': 'loaded image sprite',
-    'Lifeup': '',
-    '1timeshield': '',
-    'Bomb': '',
-    'Savedshield': ''
+    'Powerup': itemSheet.subsurface(0, 0, 16, 16),
+    'Lifeup': itemSheet.subsurface(16, 48, 16, 16),
+    '1timeshield': itemSheet.subsurface(0, 48, 16, 16),
+    'Bomb': itemSheet.subsurface(0, 48, 16, 16),
+    'Savedshield': itemSheet.subsurface(48, 0, 16, 16)
 }
