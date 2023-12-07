@@ -26,47 +26,6 @@ def delta_time(last_time):
 '''
 main function
 '''
-
-def controller(q):
-    global px, py, prev_time
-    print('Controller run started')
-    '''cv2 videocapture 생성'''
-    webcam = cv2.VideoCapture(0)
-    if not webcam.isOpened():
-        print('Could not open webcam')
-            
-    while webcam.isOpened():
-        status, frame = webcam.read()
-
-        current_time = time() - prev_time
-        
-        if (current_time > 1 / FPS) and status :
-            recognition = api.gesture_recognizer(frame)
-            gestureEvent = recognition[1][0]
-            
-            prev_time = time()
-                
-            if gestureEvent == 1:
-                q.put(OPENPALM_EVENT)
-            elif gestureEvent == 2:
-                q.put(PINCH_EVENT)
-            elif gestureEvent == 3:
-                    # save position
-                xpos = gestureEvent[1]['xyz'][0]
-                ypos = gestureEvent[1]['xyz'][1]
-                px = xpos * SCREEN_WIDTH
-                py = ypos * SCREEN_HEIGHT
-                    
-                q.put(MOVE_EVENT)
-            elif gestureEvent == 4:
-                q.put(FINGERSNAP_EVENT)
-        
-        if cv2.waitKey(1) and 0xFF == ord('q'):
-            break
-        
-    webcam.release()
-    cv2.destroyAllWindows()
-
 def spawn(n, renderPlain):
 
     if n == 1:
@@ -124,7 +83,6 @@ def main(queue):
         input()
 
 def showTitle(q):
-
     print('showTitle')
     # title text
     sysfont = pg.font.SysFont('consolas', 30)
@@ -155,11 +113,16 @@ def showTitle(q):
                 return
             
 count = 0
+prev_time = 0
     
 def Game(q):
-    global count, FPS, clock
+    global count, FPS, clock, px, py, prev_time
     print('Game')
     screen.fill((40, 200, 200))
+    
+    webcam = cv2.VideoCapture(0)
+    if not webcam.isOpened():
+        print('Could not open webcam')    
 
     sysfont = pg.font.SysFont('consolas', 30)
     title = sysfont.render('Gaming', True, (0,0,0))
@@ -184,11 +147,31 @@ def Game(q):
     pg.time.set_timer(P_FIRE_EVENT, fFireDelay)
 
     
-    while True:
+    while webcam.isOpened():
         # hand tracking event get
-        if q.qsize() != 0:
-            pg.event.post(q.get())
-        
+        status, frame = webcam.read()
+        current_time = time() - prev_time
+        if (current_time > 1 / FPS) and status:
+            recognition = api.gesture_recognizer(frame)
+            gestureEvent = recognition[1][0]
+            
+            prev_time = time()
+                
+            if gestureEvent == 1:
+                pg.event.post(OPENPALM_EVENT)
+            elif gestureEvent == 2:
+                pg.event.post(PINCH_EVENT)
+            elif gestureEvent == 3:
+                # save position
+                xpos = gestureEvent[1]['xyz'][0]
+                ypos = gestureEvent[1]['xyz'][1]
+                px = xpos * SCREEN_WIDTH
+                py = ypos * SCREEN_HEIGHT
+                    
+                pg.event.post(MOVE_EVENT)
+            elif gestureEvent == 4:
+                pg.event.post(FINGERSNAP_EVENT)
+
         # game event handling
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -206,8 +189,10 @@ def Game(q):
                 count += 1
         
             if event.type == OPENPALM_EVENT:
+                print('shield')
                 player.useShield()
             if event.type == FINGERSNAP_EVENT:
+                print('bomb')
                 player.useBomb(fBulletGroup)
             
             if event.type == MOVE_EVENT:
@@ -308,10 +293,6 @@ def gameClear(q):
 
 if __name__ == '__main__':
     q = Queue()
-    print('Process making')
-    p = Process(name='ControlProcess', target=controller, args=(q, ))
-    print('Process start')
-    p.start()
     # game main이랑 q 동기화
     main(q)
 
