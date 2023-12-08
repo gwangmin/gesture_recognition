@@ -61,7 +61,7 @@ class FingerSnap(OneHandGestureBase):
         if self.state == FingerSnap.AVAILABLE_STATES[0]:
             # if thumb and middle finger are close together
             # and index finger is up
-            if (thumb_middle_dist < self.DISTANCE_THRESHOLD) and (index_tip.y < thumb_tip.y) and (index_tip.y < middle_tip.y):
+            if (thumb_middle_dist < self.DISTANCE_THRESHOLD) and (index_tip.y < thumb_tip.y):
                 self.state = FingerSnap.AVAILABLE_STATES[1]
 
         # if state 1
@@ -75,7 +75,9 @@ class FingerSnap(OneHandGestureBase):
 
             # if thumb and middle finger moves away from each other
             # and index finger is up
-            if (self.DISTANCE_THRESHOLD < thumb_middle_dist) and (index_tip.y < middle_tip.y):
+            if (self.DISTANCE_THRESHOLD < thumb_middle_dist):
+                if not (index_tip.y < middle_tip.y):
+                    self.init()
                 if (self.thumb_middle_dist is None): # if first move, save additional progress info
                     self.thumb_middle_dist = thumb_middle_dist
                     self.wrist_middle_dist = wrist_middle_dist
