@@ -117,14 +117,13 @@ def showTitle():
     
 def Game():
     global count, FPS, clock, px, py, prev_time, webcam
-    print('Game\n')
-    screen.fill((40, 200, 200))   
+    print('Game\n') 
 
-    title = titleFont.render('GAME', False, (0,0,0))
+    title = titleFont.render('GAME', False, (240,240,240))
     rect = title.get_rect()
     rect.center = titlePos
     
-    state = stateFont.render('None', False, (0,0,0))
+    state = stateFont.render('None', False, (240,240,240))
     sRect = state.get_rect()
     sRect.center = statePos
     
@@ -167,7 +166,7 @@ def Game():
                 print('shield\n')
                 player.useShield()
                 
-                state = stateFont.render('SHIELD', False, (0,0,0))
+                state = stateFont.render('SHIELD', False, (240,240,240))
                 sRect = state.get_rect()
                 sRect.center = statePos
                 screen.blit(state, sRect)
@@ -175,7 +174,7 @@ def Game():
             if event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
                 print('bomb\n')
                 player.useBomb(fBulletGroup)                
-                state = stateFont.render('BOMB', False, (0,0,0))
+                state = stateFont.render('BOMB', False, (240,240,240))
                 sRect = state.get_rect()
                 sRect.center = statePos
                 screen.blit(state, sRect)
@@ -233,7 +232,7 @@ def Game():
         fBulletGroup.update()
         itemGroup.update()
 
-        screen.fill((40, 200, 200))
+        screen.fill((50,50,50))
         
         
         screen.blit(title, rect)
