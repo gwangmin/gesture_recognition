@@ -14,122 +14,125 @@ import gesture_recognizer.app as api
 game test; 
 서드파티 GUI api에 오류가 있어 제외;
 게임 파트만 분리한 파일입니다
+no multiprocessing
 game title > game > game clear or game over로 구성
 '''
-
-def delta_time(last_time):
-    dt = time() - last_time
-    dt *= FPS
-    last_time = time()
-    return dt, last_time
-
-'''
-main function
-'''
-def spawn(n, renderPlain):
-
-    if n == 1:
-        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.2).add(renderPlain)
-        #Foe(groups=renderPlain, foeType='F', xpos=firstMove(self)SCREEN_WIDTH * 0.1)
-        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.8).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(renderPlain)
-    if n == 2:
-        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.3).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.5).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='D', xpos=SCREEN_WIDTH * 0.7).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(renderPlain)
-        
-    if n == 3:
-        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.3).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.4).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.5).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.6).add(renderPlain)
-        Classes.Foe(groups=renderPlain, foeType='C', xpos=SCREEN_WIDTH * 0.7).add(renderPlain)
-        
-    if n == 4:
-        Classes.MiniBoss(groups=renderPlain, xpos=SCREEN_WIDTH * 0.25).add(renderPlain)
-        Classes.MiniBoss(groups=renderPlain, xpos=SCREEN_WIDTH * 0.75).add(renderPlain)
-    if n == 5:
-        Classes.Boss(groups=renderPlain).add(renderPlain)
-    
+print = sys.stdout.write
 
 # initiation
 pg.init()
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pg.display.set_caption('Gesture Bomber')
-#pg.display.set_icon('assets/spr_shield.png')
+icon = pg.image.load('assets/spr_shield.png')
+pg.display.set_icon(icon)
+titleFont = pg.font.Font('assets/Ramche.ttf', 42)
+stateFont = pg.font.Font('assets/Ramche.ttf', 30)
+
 clock = pg.time.Clock()
 prev_time = 0
-FPS = 60
+FPS = 60            
+count = 0
 
-def main(queue):
+webcam = cv2.VideoCapture(0)
+if not webcam.isOpened():
+    print('Could not open webcam\n') 
+
+'''
+main function
+'''
+
+def main():
     # background setting
     BACKGROUND_COLOR = pg.Color(80, 97, 125)
     screen.fill(BACKGROUND_COLOR)
     pg.display.update()
     lastTime = time()
     # Title
-    showTitle(queue)
+    
     while True:
         # Game
-        isClear = Game(queue)
+        showTitle()
+        isClear = Game()
         # EndFile
-        if isClear:
-            gameClear(queue)
-        else:
-            gameOver(queue)
-        input()
+        GameEnd(isClear)
 
-def showTitle(q):
-    print('showTitle')
+def postHandEvent():
+    global prev_time, webcam, px, py
+    
+    # hand tracking event get
+    status, frame = webcam.read()
+    current_time = time() - prev_time
+    if (current_time > 1 / FPS) and status:
+        recognition = api.gesture_recognizer(frame)
+        gestureEvent = recognition[1][0]
+        
+        prev_time = time()
+
+        if gestureEvent[0] == 1:
+            print('OpenPalm\n')
+            pg.event.post(pg.event.Event(OPENPALM_EVENT))
+            
+        if gestureEvent[0] == 3:
+            # save position
+            xpos = gestureEvent[1]['xyz'][0]
+            ypos = gestureEvent[1]['xyz'][1]
+            px = xpos * SCREEN_WIDTH
+            py = ypos * SCREEN_HEIGHT
+            '''
+            new moving function
+            '''
+            print(f'Move: ({px}, {py})\n')
+            pg.event.post(pg.event.Event(MOVE_EVENT))
+            
+        if gestureEvent[0] == 4:
+            print('FingerSnap\n')
+            pg.event.post(pg.event.Event(FINGERSNAP_EVENT))
+            
+        if gestureEvent[0] == 2:
+            print('Pinch\n')
+            pg.event.post(pg.event.Event(PINCH_EVENT))
+            
+def showTitle():
+    print('showTitle\n')
     # title text
-    sysfont = pg.font.SysFont('consolas', 30)
-    title = sysfont.render('Gesture Bomber', True, (0,0,0))
-    rect = pg.rect.Rect(300, 300, 300, 300)
-    rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+    title = titleFont.render('GESTURE BOMBER', False, (0,0,0))
+    rect = title.get_rect()
+    rect.center = titlePos
     screen.blit(title, rect)
 
     pg.display.update()
 
     while True:
-        if q.qsize() != 0:
-            e = q.get()
-            pg.event.post(pg.event.Event(e))
+        postHandEvent()
         
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
+                webcam.release()
                 sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                return
-            if event.type == PINCH_EVENT or event.type == MOVE_EVENT:
+            if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
                 # start sound
                 
                 # function end
                 del title
                 pg.display.update()
                 return
-            
-count = 0
-prev_time = 0
     
-def Game(q):
-    global count, FPS, clock, px, py, prev_time
-    print('Game')
-    screen.fill((40, 200, 200))
     
-    webcam = cv2.VideoCapture(0)
-    if not webcam.isOpened():
-        print('Could not open webcam')    
+    
+def Game():
+    global count, FPS, clock, px, py, prev_time, webcam
+    print('Game\n')
+    screen.fill((40, 200, 200))   
 
-    sysfont = pg.font.SysFont('consolas', 30)
-    title = sysfont.render('Gaming', True, (0,0,0))
-    rect = pg.rect.Rect(300, 300, 300, 300)
-    rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
-    screen.blit(title, rect)
-
+    title = titleFont.render('GAME', False, (0,0,0))
+    rect = title.get_rect()
+    rect.center = titlePos
+    
+    state = stateFont.render('None', False, (0,0,0))
+    sRect = state.get_rect()
+    sRect.center = statePos
+    
     count = 0
         
     itemGroup = pg.sprite.Group()
@@ -145,42 +148,18 @@ def Game(q):
     fFireDelay = 1000 * 1
     pg.time.set_timer(F_FIRE_EVENT, pFireDelay)
     pg.time.set_timer(P_FIRE_EVENT, fFireDelay)
-
     
     while webcam.isOpened():
-        # hand tracking event get
-        status, frame = webcam.read()
-        current_time = time() - prev_time
-        if (current_time > 1 / FPS) and status:
-            recognition = api.gesture_recognizer(frame)
-            gestureEvent = recognition[1][0]
-            
-            prev_time = time()
-                
-            if gestureEvent[0] == 1:
-                pg.event.post(pg.event.Event(OPENPALM_EVENT))
-            elif gestureEvent[0] == 2:
-                pg.event.post(pg.event.Event(PINCH_EVENT))
-            elif gestureEvent[0] == 3:
-                # save position
-                xpos = gestureEvent[1]['xyz'][0]
-                ypos = gestureEvent[1]['xyz'][1]
-                px = xpos * SCREEN_WIDTH
-                py = ypos * SCREEN_HEIGHT
-                print(px, py)
-
-                pg.event.post(pg.event.Event(MOVE_EVENT))
-            elif gestureEvent[0] == 4:
-                pg.event.post(pg.event.Event(FINGERSNAP_EVENT))
-
+        postHandEvent()
         # game event handling
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
+                webcam.release()
                 sys.exit()
                 
             if event.type == SPAWN_EVENT:
-                print(f'spawn: {count}, {len(foeGroup)}')
+                print(f'spawn: {count}, {len(foeGroup)}\n')
                 if count == 6:                
                     spawn(4, foeGroup)
                 elif count == 12:
@@ -190,28 +169,42 @@ def Game(q):
                 count += 1
         
             if event.type == OPENPALM_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_DOWN):
-                print('shield')
+                print('shield\n')
                 player.useShield()
+                
+                state = stateFont.render('SHIELD', False, (0,0,0))
+                sRect = state.get_rect()
+                sRect.center = statePos
+                screen.blit(state, sRect)
                 player.draw(screen)
             if event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
-                print('bomb')
-                player.useBomb(fBulletGroup)
-                
+                print('bomb\n')
+                player.useBomb(fBulletGroup)                
+                state = stateFont.render('BOMB', False, (0,0,0))
+                sRect = state.get_rect()
+                sRect.center = statePos
+                screen.blit(state, sRect)
             if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
-                print('pinch')
-                pause = sysfont.render('Pause', True, (0,0,0))
+                pause = titleFont.render('PAUSE', False, (0,0,0))
+                rect = pause.get_rect()
+                rect.center = titlePos
                 screen.fill((255,255,255))
                 screen.blit(pause, rect)
                 pg.display.update()
                 paused = True
                 while paused:
+                    postHandEvent()
                     for event in pg.event.get():
                         if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
                             paused = False
-            
+                        if event.type == pg.QUIT:
+                            pg.quit()
+                            webcam.release()
+                            sys.exit()
+            '''
             if event.type == MOVE_EVENT:
-                print('move')
                 player.update(px, py)
+            '''
             if event.type == F_FIRE_EVENT:
                 for foe in foeGroup:
                     foe.fire(fBulletGroup)
@@ -222,7 +215,6 @@ def Game(q):
         if pg.sprite.spritecollide(player, fBulletGroup, dokill=True, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
-            print(player.getLife())
 
         if pg.sprite.spritecollide(player, foeGroup, dokill=False, 
                                    collided=pg.sprite.collide_mask):
@@ -246,7 +238,11 @@ def Game(q):
         fBulletGroup.update()
         itemGroup.update()
 
-        screen.fill((40, 200, 200))       
+        screen.fill((40, 200, 200))
+        
+        
+        screen.blit(title, rect)
+        screen.blit(state, sRect)
         player.draw(screen)
         foeGroup.draw(screen)
         pBulletGroup.draw(screen)
@@ -264,56 +260,70 @@ def Game(q):
         if len(foeGroup) < 1 and count > 12:
             return True
 
-def gameOver(q):
-    print('GameOver')
+def GameEnd(isClear):
+    print('Game End\n')
+    if isClear:
+        phrase = 'GAME CLEAR!'
+    else:
+        phrase = 'GAME OVER'
 
-    screen.fill((200, 40, 200))
-    sysfont = pg.font.SysFont('consolas', 30)
-    title = sysfont.render('Game Over', True, (0,0,0))
-    rect = pg.rect.Rect(300, 300, 300, 300)
-    rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
-    screen.blit(title, rect)
-
+    screen.fill((10,10,10))
+    title = titleFont.render(phrase, False, (240,240,240))
+    rect = title.get_rect()
+    rect.center = titlePos
     
-    # gameover text
-        # hand tracking event get
-    if q.qsize() != 0:
-        pg.event.post(q.get())    
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            pg.quit()
-            sys.exit()
-        if event.type == PINCH_EVENT:
-            return
+    noticeStr = '다시 시작하시겠습니까?\n\n꼬집으면 재시작, 튕기면 종료됩니다.'
+    notice = stateFont.render(noticeStr, False, (240,240,240))
+    nRect = notice.get_rect()
+    nRect.center = statePos
+    
+    screen.blit(title, rect)
+    screen.blit(notice, nRect)
     
     pg.display.update()
             
 
-def gameClear(q):
-    # gameclear text
-    print('GameClear')
-
-    screen.fill((200, 40, 200))
-    sysfont = pg.font.SysFont('consolas', 30)
-    title = sysfont.render('Game Clear', True, (0,0,0))
-    rect = pg.rect.Rect(300, 300, 300, 300)
-    rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
-    screen.blit(title, rect)
-
     
-    if q.qsize() != 0:
-        pg.event.post(q.get()) 
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            pg.quit()
-            sys.exit()
-        if event.type == PINCH_EVENT:
-            return
+    # transparent window and notice gesture; return to title or QUIT
+    
+    while webcam.isOpened():
+        postHandEvent()
+        for event in pg.event.get():
+            if event.type == pg.QUIT or event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
+                pg.quit()
+                webcam.release()
+                sys.exit()
+            if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
+                return
         
-    pg.display.update()
+
+def spawn(n, group):
+    if n == 1:
+        Classes.Foe(groups=group, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(group)
+        Classes.Foe(groups=group, foeType='D', xpos=SCREEN_WIDTH * 0.2).add(group)
+        #Foe(groups=group, foeType='F', xpos=firstMove(self)SCREEN_WIDTH * 0.1)
+        Classes.Foe(groups=group, foeType='D', xpos=SCREEN_WIDTH * 0.8).add(group)
+        Classes.Foe(groups=group, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(group)
+    if n == 2:
+        Classes.Foe(groups=group, foeType='F', xpos=SCREEN_WIDTH * 0.1).add(group)
+        Classes.Foe(groups=group, foeType='D', xpos=SCREEN_WIDTH * 0.3).add(group)
+        Classes.Foe(groups=group, foeType='F', xpos=SCREEN_WIDTH * 0.5).add(group)
+        Classes.Foe(groups=group, foeType='D', xpos=SCREEN_WIDTH * 0.7).add(group)
+        Classes.Foe(groups=group, foeType='F', xpos=SCREEN_WIDTH * 0.9).add(group)
+        
+    if n == 3:
+        Classes.Foe(groups=group, foeType='C', xpos=SCREEN_WIDTH * 0.3).add(group)
+        Classes.Foe(groups=group, foeType='C', xpos=SCREEN_WIDTH * 0.4).add(group)
+        Classes.Foe(groups=group, foeType='C', xpos=SCREEN_WIDTH * 0.5).add(group)
+        Classes.Foe(groups=group, foeType='C', xpos=SCREEN_WIDTH * 0.6).add(group)
+        Classes.Foe(groups=group, foeType='C', xpos=SCREEN_WIDTH * 0.7).add(group)
+        
+    if n == 4:
+        Classes.MiniBoss(groups=group, xpos=SCREEN_WIDTH * 0.25).add(group)
+        Classes.MiniBoss(groups=group, xpos=SCREEN_WIDTH * 0.75).add(group)
+    if n == 5:
+        Classes.Boss(groups=group).add(group)
 
 if __name__ == '__main__':
-    q = Queue()
-    # game main이랑 q 동기화
-    main(q)
+    main()
 

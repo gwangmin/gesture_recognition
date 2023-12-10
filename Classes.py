@@ -8,35 +8,9 @@ import global_vars
 필요 클래스
 '''
 
-# item
-# random generating 
-class Item(pg.sprite.Sprite):
-    speed = 7
-    def __init__(self, groups, pos):
-        super().__init__()
-        self.itemName = choice(list(global_vars.ITEMS.keys()))
-        
-        self.image = global_vars.ITEMS[self.itemName].convert_alpha()
-        self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
-        # self.image.set_colorkey()
-        
-        self.rect = self.image.get_rect(center=pos)
-        self.add(groups)
-    
-    def update(self):
-        # fall
-        self.fall()
-    
-    def draw(self, surf):
-        surf.blit(self.image, self.rect)
-        
-    def fall(self):
-        self.rect.centery += self.speed
-        
-
 # Characters
 class Player(pg.sprite.Sprite):
-    life = 400            # life
+    life = 5            # life
     
     # test용 아이템
     bomb = 10
@@ -62,8 +36,7 @@ class Player(pg.sprite.Sprite):
     def update(self, x, y):
         self.movement = pg.math.Vector2(x, y)
         self.vpos = self.movement
-        self.rect.center = (round(self.vpos.x), round(self.vpos.y))
-        
+        self.rect.center = (round(self.vpos.x), round(self.vpos.y))        
 
     def draw(self, surf):
         surf.blit(self.image, self.rect)
@@ -79,6 +52,7 @@ class Player(pg.sprite.Sprite):
             self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
             self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
             self.rect = self.image.get_rect()
+            self.rect.center = (global_vars.px, global_vars.py)
             self.mask = pg.mask.from_surface(self.image)
         if itemName == 'Bomb':
             self.bomb += 1
@@ -135,9 +109,35 @@ class Player(pg.sprite.Sprite):
             self.image = global_vars.SHIPS['SHIELDED'].convert_alpha()
             self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
             self.rect = self.image.get_rect()
+            self.rect.center = (global_vars.px, global_vars.py)
             self.mask = pg.mask.from_surface(self.image)
+# item
+# random generating 
+class Item(pg.sprite.Sprite):
+    speed = 7
+    def __init__(self, groups, pos):
+        super().__init__()
+        self.itemName = choice(list(global_vars.ITEMS.keys()))
+        
+        self.image = global_vars.ITEMS[self.itemName].convert_alpha()
+        self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
+        # self.image.set_colorkey()
+        
+        self.rect = self.image.get_rect(center=pos)
+        self.add(groups)
     
+    def update(self):
+        # fall
+        self.fall()
     
+    def draw(self, surf):
+        surf.blit(self.image, self.rect)
+        
+    def fall(self):
+        self.rect.centery += self.speed
+        
+
+
 def firstMove(obj):
     # animate enemy
     pass
@@ -187,7 +187,9 @@ class Foe(pg.sprite.Sprite):
         self.kill()
     
     def drop(self, groups):
-        Item(groups=groups, pos=self.rect.center)
+        t = (True, False)
+        if choice(t):
+            Item(groups=groups, pos=self.rect.center)
     
     def update(self):
         pass

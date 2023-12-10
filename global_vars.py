@@ -36,6 +36,9 @@ CONTROLS = {
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
 
+titlePos = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+statePos = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+
 # gui values
 BUTTON_WIDTH = SCREEN_WIDTH * 0.2
 BUTTON_HEIGHT = SCREEN_WIDTH * 0.2
@@ -49,7 +52,6 @@ SCALED_SPRITE_SIZE = SPRITE_SIZE * 4
 # ship image
 spriteSheetFile = 'assets/spriteSheet.png'
 spriteSheet = pg.image.load(spriteSheetFile)
-
 
 SHIPS = {
     'PLAYER': spriteSheet.subsurface(0, 1100, 256, 200),
@@ -83,6 +85,6 @@ ITEMS = {
     'Powerup': itemSheet.subsurface(0, 0, 16, 16),
     'Lifeup': itemSheet.subsurface(16, 48, 16, 16),
     '1timeshield': itemSheet.subsurface(0, 48, 16, 16),
-    'Bomb': itemSheet.subsurface(0, 48, 16, 16),
+    'Bomb': itemSheet.subsurface(0, 32, 16, 16),
     'Savedshield': itemSheet.subsurface(48, 0, 16, 16)
 }
