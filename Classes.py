@@ -62,25 +62,25 @@ class Player(pg.sprite.Sprite):
     
     def fire(self, groups):
         if self.power == 0:
-            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
         if self.power == 1:
-            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
         if self.power == 2:
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
         if self.power == 3:
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), angle=45)
-            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), angle=-45)
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(1, -1).normalize())
+            Bullet(groups, kinds='SmallOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(-1, -1).normalize())
             
         if self.power == 4:
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y))
-            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), angle=45)
-            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), angle=-45)
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='BigOne', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(0, -1))
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx+self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(1, -1).normalize())
+            Bullet(groups, kinds='SmallTwo', pos=(self.rect.centerx-self.rect.width*0.4, self.rect.y), v_vm=pg.math.Vector2(-1, -1).normalize())
             
         
     def getLife(self):
@@ -170,13 +170,16 @@ class Foe(pg.sprite.Sprite):
                     
     def fire(self, groups):
         if self.foeType == 'F':
-            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, v_vm=pg.math.Vector2(0, 1))
         elif self.foeType == 'D':
-            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, angle=45)
-            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, angle=-45)
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, v_vm=pg.math.Vector2(-1, 1))
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, v_vm=pg.math.Vector2(1, 1))
         elif self.foeType == 'C':
             # 유도탄 함수
-            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True)
+            pVec = pg.math.Vector2(global_vars.px, global_vars.py)
+            vec = pg.math.Vector2(self.rect.center)
+            angle = (pVec - vec).normalize()
+            Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, v_vm=angle)
             
     def loseLife(self, damage):
         self.life -= damage
@@ -200,7 +203,7 @@ class Foe(pg.sprite.Sprite):
 class MiniBoss(pg.sprite.Sprite):
     y = 100
 
-    def __init__(self, groups, xpos, life=5, speed=1):
+    def __init__(self, groups, xpos, life=5, speed=2):
         super().__init__()
         self.image = global_vars.SHIPS['MINIBOSS'].convert_alpha()
         self.image = pg.transform.scale(self.image, (global_vars.SCALED_SPRITE_SIZE, global_vars.SCALED_SPRITE_SIZE))
@@ -210,35 +213,26 @@ class MiniBoss(pg.sprite.Sprite):
         self.life = life
         self.speed = speed
         
+        self.direction = True
         self.rect.center = (xpos, self.y)
         self.add(groups)
         firstMove(self)
     
     def move(self, dt):
-        if randint(0, 2000) < 2:
-            self.y_angle = True
-            self.old_y = self.y
-        if self.y_angle:
-            if self.y < self.old_y + global_vars.SCALED_SPRITE_SIZE:
-                self.y += self.speed * dt
-            else:
-                self.y_angle = False
+        if self.direction:
+            self.rect.x += self.speed * dt
+            if self.rect.x > global_vars.SCREEN_WIDTH - 150:
+                self.direction = False
         else:
-            if self.angle:
-                self.x += self.speed * dt
-                '''
-                if self.x > config.window_size[0]-100:
-                    self.angle = False
-                '''
-            else:
-                self.x -= self.speed * dt
-                if self.x < 5:
-                    self.angle = True
+            self.rect.x -= self.speed * dt
+            if self.rect.x < 150:
+                self.direction = True
+            
                     
     def fire(self, groups):
-        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True)
-        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, angle=45)
-        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, angle=-45)
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(0, 1))
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(1, 1).normalize())
+        Bullet(groups, kinds='SmallOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(-1, 1).normalize())
         
     def loseLife(self, damage):
         self.life -= damage
@@ -253,7 +247,7 @@ class MiniBoss(pg.sprite.Sprite):
     
     
     def update(self):
-        pass
+        self.move(1)
     
     def draw(self, surf):
         surf.blit(self.image, self.rect)
@@ -281,10 +275,14 @@ class Boss(pg.sprite.Sprite):
         firstMove(self)
                     
     def fire(self, groups):
-        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True)
-        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=45)
-        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, angle=-45)
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(0, 1))
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(1, 1).normalize())
+        Bullet(groups, kinds='BigOne', pos=self.rect.center, isFoe=True, v_vm=pg.math.Vector2(-1, 1).normalize())
         # 유도탄
+        pVec = pg.math.Vector2(global_vars.px, global_vars.py)
+        vec = pg.math.Vector2(self.rect.center)
+        angle = (pVec - vec).normalize()
+        Bullet(groups, pos=self.rect.center, kinds='SmallOne', isFoe=True, v_vm=angle)
 
     def loseLife(self, damage):
         self.life -= damage
@@ -305,29 +303,24 @@ class Boss(pg.sprite.Sprite):
 
 # bullet
 class Bullet(pg.sprite.Sprite):
-    speed = 12
+    speed = 10
     
-    def __init__(self, groups, kinds, pos, isFoe=False, angle=None):
+    def __init__(self, groups, kinds, pos, isFoe=False, v_vm=None):
         super().__init__()
         # 쏘는 객체의 위치, 벡터 값
         self.vpos = pg.math.Vector2(pos)
-        
         self.isFoe = isFoe
-        # angle; 방향 결정; default=None, left=negative angle, right=positive angle
-        self.angle = angle
-
+        self.v_vm = v_vm
+        
         if isFoe:
             self.image = global_vars.FBULLETS[kinds].convert_alpha()
-            self.v_vm = pg.math.Vector2(0, 1)
+            stdVec = pg.math.Vector2(0, 1)
         else:
             self.image = global_vars.PBULLETS[kinds].convert_alpha()
-            self.v_vm = pg.math.Vector2(0, -1)
-            
-        self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
-        if angle != None:
-            self.v_vm = self.v_vm.rotate(self.angle)
-            self.image = pg.transform.rotate(self.image, -self.angle)
+            stdVec = pg.math.Vector2(0, -1)
         
+        self.image = pg.transform.scale(self.image, (global_vars.SPRITE_SIZE, global_vars.SPRITE_SIZE))
+        self.image = pg.transform.rotate(self.image, -stdVec.angle_to(v_vm))
         self.rect = self.image.get_rect(center=pos)
         self.mask = pg.mask.from_surface(self.image)
         self.add(groups)

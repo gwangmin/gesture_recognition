@@ -60,11 +60,11 @@ def postHandEvent():
         gestureEvent = recognition[1][0]
         
         prev_time = time()
-        if gestureEvent[0] == 1:
+        if gestureEvent[0] == 1 and gestureEvent[1]['handedness'] == 'Left':
             print('OpenPalm\n')
             pg.event.post(pg.event.Event(OPENPALM_EVENT))
             
-        if gestureEvent[0] == 3:
+        if gestureEvent[0] == 3 and gestureEvent[1]['handedness'] == 'Right':
             # save position
             xpos = gestureEvent[1]['xyz'][0]
             ypos = gestureEvent[1]['xyz'][1]
@@ -76,11 +76,11 @@ def postHandEvent():
             print(f'Move: ({px}, {py})\n')
             pg.event.post(pg.event.Event(MOVE_EVENT))
             
-        if gestureEvent[0] == 4:
+        if gestureEvent[0] == 4 and gestureEvent[1]['handedness'] == 'Left':
             print('FingerSnap\n')
             pg.event.post(pg.event.Event(FINGERSNAP_EVENT))
             
-        if gestureEvent[0] == 2:
+        if gestureEvent[0] == 2 and gestureEvent[1]['handedness'] == 'Left':
             print('Pinch\n')
             pg.event.post(pg.event.Event(PINCH_EVENT))
             
