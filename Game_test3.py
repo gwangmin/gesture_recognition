@@ -128,14 +128,42 @@ def Game():
     sRect.center = statePos
     
     count = 0
-        
+    
+    #sprites    
+    player = Classes.Player(pos=(px, py))
+    
     itemGroup = pg.sprite.Group()
     foeGroup = pg.sprite.Group()
     pBulletGroup = pg.sprite.Group()
     fBulletGroup = pg.sprite.Group()
+
     
-    player = Classes.Player(pos=(px, py))
+    # HUD
+    lifeHUD = ITEMS['Lifeup'].convert_alpha()
+    lifeHUD = pg.transform.scale(lifeHUD, (SPRITE_SIZE, SPRITE_SIZE))
+    lifeRect = lifeHUD.get_rect()
+    lifeRect.center = (SCREEN_WIDTH-100, SCREEN_HEIGHT-200)
+    shieldHUD = ITEMS['Savedshield'].convert_alpha()
+    shieldHUD = pg.transform.scale(shieldHUD, (SPRITE_SIZE, SPRITE_SIZE))
+    shieldRect = shieldHUD.get_rect()
+    shieldRect.center = (SCREEN_WIDTH-100, SCREEN_HEIGHT-150)
+    bombHUD = ITEMS['Bomb'].convert_alpha()
+    bombHUD = pg.transform.scale(bombHUD, (SPRITE_SIZE, SPRITE_SIZE))
+    bombRect = bombHUD.get_rect()
+    bombRect.center = (SCREEN_WIDTH-100, SCREEN_HEIGHT-100)
     
+    currentLife = stateFont.render(str(player.getLife()), False, (240,240,240))
+    currentShield = stateFont.render(str(player.savedShield), False, (240,240,240))
+    currentBomb = stateFont.render(str(player.bomb), False, (240,240,240))
+    cLRect = currentLife.get_rect()
+    cLRect.center = (SCREEN_WIDTH-50, SCREEN_HEIGHT-200)
+    cSRect = currentShield.get_rect()
+    cSRect.center = (SCREEN_WIDTH-50, SCREEN_HEIGHT-150)
+    cBRect = currentBomb.get_rect()
+    cBRect.center = (SCREEN_WIDTH-50, SCREEN_HEIGHT-100)
+    
+    
+    # set events
     spawnDelay = 1000 * 5     # spawn delay
     pg.time.set_timer(SPAWN_EVENT, spawnDelay)
     pFireDelay = int(1000 * 0.8)
@@ -170,6 +198,7 @@ def Game():
                 sRect = state.get_rect()
                 sRect.center = statePos
                 screen.blit(state, sRect)
+                currentShield = stateFont.render(str(player.savedShield), False, (240,240,240))
                 player.draw(screen)
             if event.type == FINGERSNAP_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_UP):
                 print('bomb\n')
@@ -177,6 +206,7 @@ def Game():
                 state = stateFont.render('BOMB', False, (240,240,240))
                 sRect = state.get_rect()
                 sRect.center = statePos
+                currentBomb = stateFont.render(str(player.bomb), False, (240,240,240))
                 screen.blit(state, sRect)
             if event.type == PINCH_EVENT or (event.type == pg.KEYDOWN and event.key == pg.K_RIGHT):
                 pause = titleFont.render('PAUSE', False, (0,0,0))
@@ -209,10 +239,12 @@ def Game():
         if pg.sprite.spritecollide(player, fBulletGroup, dokill=True, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
+            currentLife = stateFont.render(str(player.getLife()), False, (240,240,240))
 
         if pg.sprite.spritecollide(player, foeGroup, dokill=False, 
                                    collided=pg.sprite.collide_mask):
             player.loseLife()
+            currentLife = stateFont.render(str(player.getLife()), False, (240,240,240))
                 
         foeDict = pg.sprite.groupcollide(pBulletGroup, foeGroup, dokilla=True, dokillb=False, collided=pg.sprite.collide_mask)
         for bullet in foeDict:
@@ -225,6 +257,9 @@ def Game():
         item = pg.sprite.spritecollide(player, itemGroup, dokill=True, collided=pg.sprite.collide_mask)
         for i in item:
             player.getItem(i.itemName)
+            currentLife = stateFont.render(str(player.getLife()), False, (240,240,240))
+            currentShield = stateFont.render(str(player.savedShield), False, (240,240,240))
+            currentBomb = stateFont.render(str(player.bomb), False, (240,240,240))
                 
         player.update(px, py)            
         foeGroup.update()
@@ -234,9 +269,16 @@ def Game():
 
         screen.fill((50,50,50))
         
-        
         screen.blit(title, rect)
         screen.blit(state, sRect)
+        
+        screen.blit(lifeHUD, lifeRect)
+        screen.blit(currentLife, cLRect)
+        screen.blit(shieldHUD, shieldRect)
+        screen.blit(currentShield, cSRect)
+        screen.blit(bombHUD, bombRect)
+        screen.blit(currentBomb, cBRect)
+        
         player.draw(screen)
         foeGroup.draw(screen)
         pBulletGroup.draw(screen)

@@ -10,12 +10,12 @@ import global_vars
 
 # Characters
 class Player(pg.sprite.Sprite):
-    life = 5            # life
-    
-    # test용 아이템
+    # test setting
+    life = 5            
     bomb = 10
     savedShield = 10
-    # test용 아이템
+
+
     shield = False
     power = 0
     
