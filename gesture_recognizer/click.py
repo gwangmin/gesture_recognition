@@ -2,9 +2,11 @@
 Click gesture(pinching)
 '''
 
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
 import cv2
 import numpy as np
+from typing import List, Dict, Any
 
 # non-relative import for test
 if __name__ == '__main__':
@@ -44,12 +46,13 @@ class Click(OneHandGestureBase):
         self.DISTANCE_THRESHOLD2 = DISTANCE_THRESHOLD2
         self.init()
     
-    def init(self):
+    def init(self) -> None:
         self.state = self.AVAILABLE_STATES[0]
         self.wrist_index_dist = None
         self.middle_tip_arr = None
 
-    def check(self, handedness_name, hand_landmarks, info):
+    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
+              info: Dict[str, Any]) -> bool:
         thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
         index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
         middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
@@ -91,7 +94,7 @@ class Click(OneHandGestureBase):
         
         return False
     
-    def handler(self):
+    def handler(self) -> Any:
         '''
         Gesture handler.
         '''

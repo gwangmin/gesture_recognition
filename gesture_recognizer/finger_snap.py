@@ -2,10 +2,12 @@
 finger snap gesture
 '''
 
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
 import time
 import cv2
 import numpy as np
+from typing import List, Dict, Any
 
 # non-relative import for test
 if __name__ == '__main__':
@@ -46,12 +48,13 @@ class FingerSnap(OneHandGestureBase):
         self.DISTANCE_THRESHOLD = DISTANCE_THRESHOLD
         self.init()
     
-    def init(self):
+    def init(self) -> None:
         self.state = self.AVAILABLE_STATES[0]
         self.thumb_middle_dist = None
         self.wrist_middle_dist = None
 
-    def check(self, handedness_name, hand_landmarks, info):
+    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
+              info: Dict[str, Any]) -> bool:
         thumb_tip = hand_landmarks[landmarks_num.THUMB_TIP]
         index_tip = hand_landmarks[landmarks_num.INDEX_FINGER_TIP]
         middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
@@ -108,7 +111,7 @@ class FingerSnap(OneHandGestureBase):
 
         return False
     
-    def handler(self):
+    def handler(self) -> Any:
         '''
         Gesture handler.
         '''
