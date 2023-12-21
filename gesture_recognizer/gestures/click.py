@@ -24,7 +24,7 @@ class Click(OneHandGestureBase):
         release - release
     '''
     AVAILABLE_STATES = [None, 'pinch', 'release']
-    def __init__(self, DISTANCE_THRESHOLD1=3.0, DISTANCE_THRESHOLD2=3.0) -> None:
+    def __init__(self, DISTANCE_THRESHOLD1=3.5, DISTANCE_THRESHOLD2=3.0) -> None:
         '''
         Initializer.
 
