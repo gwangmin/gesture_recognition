@@ -2,25 +2,16 @@
 Click gesture(pinching)
 '''
 
-from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
+from typing import List, Dict, Any
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import cv2
 import numpy as np
-from typing import List, Dict, Any
-
-# non-relative import for test
-if __name__ == '__main__':
-    from lib import OneHandGestureBase
-    from lib import TwoHandGestureManager
-    from lib import GestureRecognizer
-    from lib import landmarks_num
-    import lib
-else:
-    from .lib import OneHandGestureBase
-    from .lib import TwoHandGestureManager
-    from .lib import GestureRecognizer
-    from .lib import landmarks_num
-    from . import lib
+from ..lib.recognizers import landmarks_num
+from ..lib.recognizers import GestureRecognizer
+from ..lib.gesture_templates import OneHandGestureBase
+from ..lib.gesture_templates import TwoHandGestureManager
+from ..lib import cv_shortcuts as cv
 
 
 class Click(OneHandGestureBase):
@@ -142,25 +133,24 @@ def landmarks_viwer():
                     thumb_index_dist = np.linalg.norm(thumb_tip_arr - index_tip_arr) * 100
                     wrist_index_dist = np.linalg.norm(index_tip_arr - wrist_arr) * 100
 
-
                     middle_tip_arr = np.array([middle_tip.x, middle_tip.y])
                     wrist_arr = np.array([wrist.x, wrist.y])
                     wrist_middle_dist = np.linalg.norm(middle_tip_arr - wrist_arr) * 100
 
                     text = f'thumb_index_dist: {thumb_index_dist}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[0], lib.CV_R)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[0], cv.CV_R)
                     
                     text = f'wrist_index_dist: {wrist_index_dist}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[1], lib.CV_G)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[1], cv.CV_G)
 
                     text = f'wrist_middle_dist: {wrist_middle_dist}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[2], lib.CV_B)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[2], cv.CV_B)
 
                     text = f'WRIST: {int(wrist.x*100)}, {int(wrist.y*100)}, {int(wrist.z*100)}'
-                    lib.cv_draw_text(frame, text, (int(cam_w*.5),30), lib.CV_R)
+                    cv.cv_draw_text(frame, text, (int(cam_w*.5),30), cv.CV_R)
                     
                     text = f'MIDDLE_FINGER_TIP: {int(middle_tip.x*100)}, {int(middle_tip.y*100)}, {int(middle_tip.z*100)}'
-                    lib.cv_draw_text(frame, text, (int(cam_w*.5),60), lib.CV_G)
+                    cv.cv_draw_text(frame, text, (int(cam_w*.5),60), cv.CV_G)
                     
                     GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             # show frame

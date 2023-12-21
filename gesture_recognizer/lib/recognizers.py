@@ -1,7 +1,8 @@
 '''
-Gesture recognizer basic module
+Gesture recognizers
 '''
 
+from typing import Callable, List, Any, Optional
 import mediapipe as mp
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
@@ -9,11 +10,11 @@ from mediapipe.tasks.python.components.containers import landmark as landmark_mo
 import cv2
 import numpy as np
 import requests
-from typing import Callable, List, Dict, Tuple, Any, Optional
+from .cv_shortcuts import *
 
 
-### detector & recognizer
 landmarks_num = mp.solutions.hands.HandLandmark # landmark index
+
 
 class HandLandmarker:
     '''
@@ -101,6 +102,7 @@ class HandLandmarker:
         Release resources
         '''
         self.landmarker.close()
+
 
 class GestureRecognizer:
     '''
@@ -222,131 +224,6 @@ class GestureRecognizer:
         self.recognizer.close()
 
 
-### gestures
-class OneHandGestureBase:
-    '''
-    Base class for One-Hand gesture recognition.
-    [You should overrides all these methods]
-    '''
-    AVAILABLE_STATES = [None, 'others']
-    def __init__(self) -> None:
-        '''
-        Default initializer.
-
-        1. save gesture specific settings.
-        2. call 'self.init()'.
-        '''
-        # ----- EXAMPLE CODE -----
-        # save gesture specific settings
-        self.settings = 'gesture specific settings'
-        self.init()
-
-    def init(self) -> None:
-        '''
-        Self initializing.
-
-        initialize internal states.
-        '''
-        # ----- EXAMPLE CODE -----
-        self.state = self.AVAILABLE_STATES[0]
-    
-    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
-              info: Dict[str, Any]) -> bool:
-        '''
-        Check hand landmark detection result. return True, if gesture recognized.
-
-        handedness_name: handedness display_name. 'Left' or 'Right'.
-        hand_landmarks: one hand landmarks.
-        info: other info dict.
-                e.g. {'gesture_name': result.gestures[i][0].category_name}
-
-        return: True, if gesture recognized.
-        '''
-        # ----- EXAMPLE CODE -----
-        # if state 0
-        if self.state == self.AVAILABLE_STATES[0]:
-            pass
-        # if last state
-        elif self.state == self.AVAILABLE_STATES[-1]:
-            self.init()
-            return True
-        return False
-    
-    def handler(self) -> Any:
-        '''
-        Default gesture handler.
-
-        When gesture recognized, execute this method.
-        '''
-        raise NotImplementedError()
-
-class TwoHandGestureManager:
-    '''
-    Manager for 2-Hand gesture recognition by 2 One-Hand gesture instance.
-    '''
-    def __init__(self, instances: Dict[str, OneHandGestureBase]) -> None:
-        '''
-        Initializer.
-
-        instances: {handedness_name: OneHandGestureBase's_child_instance}.
-                    e.g. {'Left': OneHandGestureBase's_child_instance, 'Right': OneHandGestureBase's_child_instance}.
-        '''
-        self.instances = instances
-    
-    def init(self, handedness_name: str) -> None:
-        '''
-        Call 'OneHandGestureBase.init' on specified instance.
-
-        handedness_name: handedness display_name. 'Left' or 'Right'.
-                            or 'all'.
-        '''
-        if handedness_name == 'all':
-            for instance in self.instances.values():
-                instance.init()
-        else:
-            self.instances[handedness_name].init()
-    
-    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
-              info: Dict[str, Any]) -> bool:
-        '''
-        Call 'OneHandGestureBase.check' on specified instance.
-
-        params and return: see 'OneHandGestureBase.check'.
-        '''
-        ret = self.instances[handedness_name].check(handedness_name, hand_landmarks, info)
-        return ret
-
-    def handler(self, handedness_name: str, *args: Any) -> Any:
-        '''
-        Call 'OneHandGestureBase.handler' on specified instance.
-        
-        handedness_name: handedness display_name. 'Left' or 'Right'.
-        args: handler arguments.
-
-        return: handler return.
-        '''
-        return self.instances[handedness_name].handler(*args)
-
-
-### cv shortcuts
-CV_R = (0, 0, 255)
-CV_G = (0, 255, 0)
-CV_B = (255, 0, 0)
-CV_ORGS = [(10,30), (10,60), (10,90)]
-def cv_draw_text(img: np.ndarray, text: str, org: Tuple[int, int], color: Tuple[int, int, int]):
-    '''
-    'cv2.putText' Shortcut func.
-
-    img: image.
-    text: string.
-    org: Bottom-left corner of the text string in the image.
-    color: bgr color. e.g. CV_R
-    '''
-    cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, 1, 
-                color, thickness=3, lineType=cv2.LINE_AA)
-
-
-### examples
 def hand_landmarker_test():
     '''
     [Deprecated]
@@ -394,6 +271,7 @@ def hand_landmarker_test():
     hand_landmarker.close()
     cam.release()
     cv2.destroyAllWindows()
+
 
 def gesture_recognizer_test():
     '''

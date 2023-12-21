@@ -2,26 +2,16 @@
 finger snap gesture
 '''
 
-from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
-import time
+from typing import List, Dict, Any
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import cv2
 import numpy as np
-from typing import List, Dict, Any
-
-# non-relative import for test
-if __name__ == '__main__':
-    from lib import OneHandGestureBase
-    from lib import TwoHandGestureManager
-    from lib import GestureRecognizer
-    from lib import landmarks_num
-    import lib
-else:
-    from .lib import OneHandGestureBase
-    from .lib import TwoHandGestureManager
-    from .lib import GestureRecognizer
-    from .lib import landmarks_num
-    from . import lib
+from ..lib.recognizers import landmarks_num
+from ..lib.recognizers import GestureRecognizer
+from ..lib.gesture_templates import OneHandGestureBase
+from ..lib.gesture_templates import TwoHandGestureManager
+from ..lib import cv_shortcuts as cv
 
 
 DEBUG = False
@@ -151,17 +141,17 @@ def landmarks_viwer():
                     middle_tip = hand_landmarks[landmarks_num.MIDDLE_FINGER_TIP]
 
                     text = f'THUMB_TIP: {int(thumb_tip.x*100)}, {int(thumb_tip.y*100)}, {int(thumb_tip.z*100)}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[0], lib.CV_R)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[0], cv.CV_R)
 
                     text = f'INDEX_FINGER_TIP: {int(index_tip.x*100)}, {int(index_tip.y*100)}, {int(index_tip.z*100)}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[1], lib.CV_G)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[1], cv.CV_G)
 
                     text = f'MIDDLE_FINGER_TIP: {int(middle_tip.x*100)}, {int(middle_tip.y*100)}, {int(middle_tip.z*100)}'
-                    lib.cv_draw_text(frame, text, lib.CV_ORGS[2], lib.CV_B)
+                    cv.cv_draw_text(frame, text, cv.CV_ORGS[2], cv.CV_B)
 
                     d = np.linalg.norm(np.array([thumb_tip.x,thumb_tip.y,thumb_tip.z]) - np.array([middle_tip.x,middle_tip.y,middle_tip.z])) * 100
                     text = f'dist: {d}'
-                    lib.cv_draw_text(frame, text, (10,120), lib.CV_R)
+                    cv.cv_draw_text(frame, text, (10,120), cv.CV_R)
                     
                     GestureRecognizer.draw_landmarks(frame, hand_landmarks)
             # show frame

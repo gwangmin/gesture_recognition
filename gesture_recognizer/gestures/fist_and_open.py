@@ -2,25 +2,14 @@
 Fist and Open gesture
 '''
 
-from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
+from typing import List, Dict, Any
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import cv2
 import numpy as np
-from typing import List, Dict, Any
-
-# non-relative import for test
-if __name__ == '__main__':
-    from lib import OneHandGestureBase
-    from lib import TwoHandGestureManager
-    from lib import GestureRecognizer
-    # from lib import landmarks_num
-    # import lib
-else:
-    from .lib import OneHandGestureBase
-    from .lib import TwoHandGestureManager
-    from .lib import GestureRecognizer
-    # from .lib import landmarks_num
-    # from . import lib
+from ..lib.recognizers import GestureRecognizer
+from ..lib.gesture_templates import OneHandGestureBase
+from ..lib.gesture_templates import TwoHandGestureManager
 
 
 class FistAndOpen(OneHandGestureBase):
