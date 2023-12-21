@@ -2,9 +2,11 @@
 Fist and Open gesture
 '''
 
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import sys
 import cv2
 import numpy as np
+from typing import List, Dict, Any
 
 # non-relative import for test
 if __name__ == '__main__':
@@ -38,10 +40,11 @@ class FistAndOpen(OneHandGestureBase):
         '''
         self.init()
     
-    def init(self):
+    def init(self) -> None:
         self.state = self.AVAILABLE_STATES[0]
 
-    def check(self, handedness_name, hand_landmarks, info):
+    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
+              info: Dict[str, Any]) -> bool:
         # if state 0
         if self.state == self.AVAILABLE_STATES[0]:
             # if closed_fist
@@ -67,7 +70,7 @@ class FistAndOpen(OneHandGestureBase):
         
         return False
     
-    def handler(self):
+    def handler(self) -> Any:
         '''
         Gesture handler.
         '''

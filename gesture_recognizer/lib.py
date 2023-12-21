@@ -2,12 +2,14 @@
 Gesture recognizer basic module
 '''
 
-
 import mediapipe as mp
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
+from mediapipe.tasks.python.components.containers import landmark as landmark_module
 import cv2
 import numpy as np
+import requests
+from typing import Callable, List, Dict, Tuple, Any, Optional
 
 
 ### detector & recognizer
@@ -121,7 +123,9 @@ class GestureRecognizer:
     VICTORY = 'Victory'
     ILOVEYOU = 'ILoveYou'
 
-    def __init__(self, mode=IMAGE, max_num_hands=1, result_callback=None, download_model=True) -> None:
+    def __init__(self, mode: vision.RunningMode = IMAGE, max_num_hands: int = 1,
+                 result_callback: Optional[Callable[[vision.GestureRecognizerResult, mp.Image, int],None]] = None,
+                 download_model: bool = True) -> None:
         '''
         Initializer.
 
@@ -156,16 +160,15 @@ class GestureRecognizer:
             )
         self.recognizer = vision.GestureRecognizer.create_from_options(options)
 
-    def download_latest_model(self):
+    def download_latest_model(self) -> None:
         '''
         Download the latest gesture_recognizer model.
         '''
-        import requests
         resp = requests.get(self.MODEL_DOWNLOAD_URL)
         with open('gesture_recognizer.task', 'wb') as f:
             f.write(resp.content)
 
-    def __parse_result(self, result):
+    def __parse_result(self, result: vision.GestureRecognizerResult) -> Any:
         '''
         Parse result.
 
@@ -176,7 +179,7 @@ class GestureRecognizer:
         '''
         return result
     
-    def get_result(self, rgb_img, elapsed_timestamp_ms=None):
+    def get_result(self, rgb_img: np.ndarray, elapsed_timestamp_ms: Optional[int] = None) -> Any:
         '''
         Recognize gesture from rgb_img and return results.
 
@@ -198,7 +201,7 @@ class GestureRecognizer:
         return self.__parse_result(result)
 
     @classmethod
-    def draw_landmarks(cls, rgb_img, one_hand_landmarks):
+    def draw_landmarks(cls, rgb_img: np.ndarray, one_hand_landmarks: List[landmark_module.NormalizedLandmark]) -> None:
         '''
         Draw one hand landmarks.
 
@@ -211,7 +214,7 @@ class GestureRecognizer:
         ])
         HandLandmarker.draw_landmarks(rgb_img, hand_landmarks_proto)
 
-    def close(self):
+    def close(self) -> None:
         '''
         Release resources
         '''
@@ -237,7 +240,7 @@ class OneHandGestureBase:
         self.settings = 'gesture specific settings'
         self.init()
 
-    def init(self):
+    def init(self) -> None:
         '''
         Self initializing.
 
@@ -246,7 +249,8 @@ class OneHandGestureBase:
         # ----- EXAMPLE CODE -----
         self.state = self.AVAILABLE_STATES[0]
     
-    def check(self, handedness_name, hand_landmarks, info):
+    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
+              info: Dict[str, Any]) -> bool:
         '''
         Check hand landmark detection result. return True, if gesture recognized.
 
@@ -267,7 +271,7 @@ class OneHandGestureBase:
             return True
         return False
     
-    def handler(self):
+    def handler(self) -> Any:
         '''
         Default gesture handler.
 
@@ -279,7 +283,7 @@ class TwoHandGestureManager:
     '''
     Manager for 2-Hand gesture recognition by 2 One-Hand gesture instance.
     '''
-    def __init__(self, instances) -> None:
+    def __init__(self, instances: Dict[str, OneHandGestureBase]) -> None:
         '''
         Initializer.
 
@@ -288,7 +292,7 @@ class TwoHandGestureManager:
         '''
         self.instances = instances
     
-    def init(self, handedness_name):
+    def init(self, handedness_name: str) -> None:
         '''
         Call 'OneHandGestureBase.init' on specified instance.
 
@@ -301,7 +305,8 @@ class TwoHandGestureManager:
         else:
             self.instances[handedness_name].init()
     
-    def check(self, handedness_name, hand_landmarks, info):
+    def check(self, handedness_name: str, hand_landmarks: List[landmark_module.NormalizedLandmark],
+              info: Dict[str, Any]) -> bool:
         '''
         Call 'OneHandGestureBase.check' on specified instance.
 
@@ -310,7 +315,7 @@ class TwoHandGestureManager:
         ret = self.instances[handedness_name].check(handedness_name, hand_landmarks, info)
         return ret
 
-    def handler(self, handedness_name, *args):
+    def handler(self, handedness_name: str, *args: Any) -> Any:
         '''
         Call 'OneHandGestureBase.handler' on specified instance.
         
@@ -327,7 +332,7 @@ CV_R = (0, 0, 255)
 CV_G = (0, 255, 0)
 CV_B = (255, 0, 0)
 CV_ORGS = [(10,30), (10,60), (10,90)]
-def cv_draw_text(img, text, org, color):
+def cv_draw_text(img: np.ndarray, text: str, org: Tuple[int, int], color: Tuple[int, int, int]):
     '''
     'cv2.putText' Shortcut func.
 
