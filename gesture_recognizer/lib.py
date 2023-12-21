@@ -185,6 +185,7 @@ class GestureRecognizer:
 
         rgb_img: input rgb image.
         elapsed_timestamp_ms: elapsed time after start. in ms.
+                                if video or live stream mode, required.
 
         return: GestureRecognizerResult
                 (https://developers.google.com/mediapipe/api/solutions/python/mp/tasks/vision/GestureRecognizerResult).
