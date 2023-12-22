@@ -11,4 +11,9 @@ gesture recognition library using mediapipe.
 # How to run example script
 'python -m gesture_recognizer.examples.gesture_test' in gesture_recognition(prj root) dir.
 
+# How to implements your own gesture
+1. add .py file into gesture_recognizer/gestures dir.
+2. extends gesture_recognizer.lib.gesture_templates.OneHandGestureBase and overrides all methods(see code guide in OneHandGestureBase source code).
+3. write test func(example: victory func in victory.py).
+
 # todo
