@@ -15,5 +15,3 @@ gesture recognition library using mediapipe.
 1. add .py file into gesture_recognizer/gestures dir.
 2. extends gesture_recognizer.lib.gesture_templates.OneHandGestureBase and overrides all methods(see code guide in OneHandGestureBase source code).
 3. write test func(example: victory func in victory.py).
-
-# todo
